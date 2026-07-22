@@ -1,5 +1,6 @@
 import type { User } from './user';
 import type { Report } from '@/report/types';
+import type { EvInputs } from '@/lib/chat/types';
 
 // ─── Solar constants (ported from original HTML) ────────────────────────────
 const PEAK_SUN_HRS = 5.0;
@@ -22,6 +23,24 @@ const SHADE_FACTOR: Record<ShadeLevel, number> = {
   heavy:   0.60,
 };
 
+export type Orientation = 'south' | 'east' | 'west' | 'north';
+
+// Relative generation yield by roof orientation (south-facing is optimal
+// in the northern hemisphere; east/west lose some midday sun, north loses most).
+const ORIENTATION_FACTOR: Record<Orientation, number> = {
+  south: 1.0,
+  east:  0.93,
+  west:  0.93,
+  north: 0.78,
+};
+
+const ORIENTATION_LABEL: Record<Orientation, string> = {
+  south: 'South-facing',
+  east:  'East-facing',
+  west:  'West-facing',
+  north: 'North-facing',
+};
+
 // Monthly generation profile (relative weights, sums to ~12)
 const MONTHLY_PROFILE = [0.65, 0.72, 0.90, 1.02, 1.12, 1.18, 1.20, 1.15, 1.04, 0.92, 0.72, 0.58];
 const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -41,7 +60,13 @@ export interface SolarMetrics {
   treesEquivalent: number;
 }
 
-export function computeSolarMetrics(roof: RoofSize, shade: ShadeLevel, user: User): SolarMetrics {
+export function computeSolarMetrics(
+  roof: RoofSize,
+  shade: ShadeLevel,
+  user: User,
+  orientation: Orientation = 'south',
+  installCostPerW: number = COST_PER_KW / 1000,
+): SolarMetrics {
   const avgMonthlyKwh = user.bill.kwh;
   const annualUsageKwh = avgMonthlyKwh * 12;
   const avgRate = (user.bill.electricCost / user.bill.kwh);
@@ -55,13 +80,14 @@ export function computeSolarMetrics(roof: RoofSize, shade: ShadeLevel, user: Use
   }
 
   const shadeFactor = SHADE_FACTOR[shade];
-  const annualGenerationKwh = systemKw * PEAK_SUN_HRS * 365 * SYSTEM_EFF * shadeFactor;
+  const orientationFactor = ORIENTATION_FACTOR[orientation];
+  const annualGenerationKwh = systemKw * PEAK_SUN_HRS * 365 * SYSTEM_EFF * shadeFactor * orientationFactor;
   const coveragePct = Math.min(100, Math.round((annualGenerationKwh / annualUsageKwh) * 100));
 
   const annualSavings = Math.round(annualGenerationKwh * avgRate);
   const monthlySavings = Math.round(annualSavings / 12);
 
-  const grossCost = systemKw * COST_PER_KW;
+  const grossCost = systemKw * installCostPerW * 1000;
   const netCost = grossCost * (1 - FEDERAL_ITC);
   const paybackYears = parseFloat((netCost / annualSavings).toFixed(1));
   const twentyYearSavings = Math.round(annualSavings * 20 - netCost);
@@ -86,8 +112,43 @@ export function computeSolarMetrics(roof: RoofSize, shade: ShadeLevel, user: Use
   };
 }
 
-export function buildDynamicSolarReport(roof: RoofSize, shade: ShadeLevel, user: User): Report {
-  const m = computeSolarMetrics(roof, shade, user);
+export interface SolarRefineOverrides {
+  orientation?: Orientation;
+  installCostPerW?: number;
+  /** True once the "What if?" refine flow has fully completed — flips the
+   *  report's assumptions block from "ASSUMPTIONS" to "YOUR INPUTS". Kept
+   *  separate from the field overrides above so the panel can live-preview
+   *  each answer as it's picked (mid-flow) without prematurely relabeling
+   *  the whole block as user-provided before the flow is actually done. */
+  refined?: boolean;
+  /** Which of the four refine-flow fields the user actually answered vs
+   *  left as "keep the estimate". Only meaningful when `refined` is true —
+   *  answered fields render under "YOUR INPUTS", the rest (plus "Usable
+   *  sunlight", which is never asked) render under "ASSUMPTIONS:". */
+  provided?: {
+    roof: boolean;
+    shade: boolean;
+    orientation: boolean;
+    installCostPerW: boolean;
+  };
+}
+
+export function buildDynamicSolarReport(
+  roof: RoofSize,
+  shade: ShadeLevel,
+  user: User,
+  overrides?: SolarRefineOverrides,
+): Report {
+  // roof/shade come in from the caller (auto-detected, or live-previewed from
+  // the refine flow's in-progress answers); orientation/installCostPerW have
+  // no auto-detected equivalent so they default when not yet answered.
+  const effRoof: RoofSize = roof;
+  const effShade: ShadeLevel = shade;
+  const orientation: Orientation = overrides?.orientation ?? 'south';
+  const installCostPerW = overrides?.installCostPerW ?? COST_PER_KW / 1000;
+  const refined = !!overrides?.refined;
+
+  const m = computeSolarMetrics(effRoof, effShade, user, orientation, installCostPerW);
   const avgRate = user.bill.electricCost / user.bill.kwh;
 
   // Annual costs
@@ -108,21 +169,21 @@ export function buildDynamicSolarReport(roof: RoofSize, shade: ShadeLevel, user:
 
   // Roof descriptors
   const roofDesc = {
-    small:  { sqFt: '~400 sq ft', label: 'small south-facing roof' },
-    medium: { sqFt: '~700 sq ft', label: 'medium south-facing roof' },
-    large:  { sqFt: '~1,000 sq ft', label: 'large south-facing roof' },
-  }[roof];
+    small:  { sqFt: '~400 sq ft', label: `small ${ORIENTATION_LABEL[orientation].toLowerCase()} roof` },
+    medium: { sqFt: '~700 sq ft', label: `medium ${ORIENTATION_LABEL[orientation].toLowerCase()} roof` },
+    large:  { sqFt: '~1,000 sq ft', label: `large ${ORIENTATION_LABEL[orientation].toLowerCase()} roof` },
+  }[effRoof];
   const shadeDesc = {
     none:    'minimal shading',
     partial: 'partial shading',
     heavy:   'heavy shading',
-  }[shade];
+  }[effShade];
   const shadeChipDesc = {
     none:    'Minimal shading',
     partial: 'Moderate shading',
     heavy:   'Heavy shading',
-  }[shade];
-  const sunHours = (PEAK_SUN_HRS * SHADE_FACTOR[shade]).toFixed(1);
+  }[effShade];
+  const sunHours = (PEAK_SUN_HRS * SHADE_FACTOR[effShade] * ORIENTATION_FACTOR[orientation]).toFixed(1);
   const panelCount = Math.round(m.systemKw / 0.4);
   const roofSqFt = panelCount * 20;
 
@@ -130,8 +191,8 @@ export function buildDynamicSolarReport(roof: RoofSize, shade: ShadeLevel, user:
   const smallerKw = Math.max(2, Math.round((m.systemKw - 3) * 10) / 10);
   const largerKw  = Math.round((m.systemKw + 3) * 10) / 10;
   function quickPayback(kw: number): { netCost: string; payback: string } {
-    const netCost = kw * COST_PER_KW * (1 - FEDERAL_ITC);
-    const annualSav = kw * PEAK_SUN_HRS * 365 * SYSTEM_EFF * SHADE_FACTOR[shade] * avgRate;
+    const netCost = kw * installCostPerW * 1000 * (1 - FEDERAL_ITC);
+    const annualSav = kw * PEAK_SUN_HRS * 365 * SYSTEM_EFF * SHADE_FACTOR[effShade] * ORIENTATION_FACTOR[orientation] * avgRate;
     return {
       netCost: `$${Math.round(netCost).toLocaleString()}`,
       payback: `${(netCost / annualSav).toFixed(1)} yrs`,
@@ -226,8 +287,8 @@ export function buildDynamicSolarReport(roof: RoofSize, shade: ShadeLevel, user:
         yAxisLabels: ['6000W', '3000W', '0W', '-3000W', '-6000W'],
         xAxisLabels: ['12am', '2am', '4am', '6am', '8am', '10am', '12pm', '2pm', '4pm', '6pm', '8pm', '10pm'],
         legend: [
-          { label: 'Home Consumption', swatch: 'orange' },
-          { label: 'Solar Generation', swatch: 'blue' },
+          { label: 'Home Consumption', swatch: 'blue' },
+          { label: 'Solar Generation', swatch: 'orange' },
           { label: 'Grid Export', swatch: 'green' },
         ],
         footerNotes: ['☀️ Solar peaks midday', '🏠 Consumption peaks evenings', '🟢 Green shaded = power back to grid'],
@@ -337,17 +398,47 @@ export function buildDynamicSolarReport(roof: RoofSize, shade: ShadeLevel, user:
         ],
         exportNote: 'EXPORT RATES (SAME FOR EVERY PLAN)',
       },
-      {
-        type: 'inputs',
-        headline: 'ASSUMPTIONS',
-        assumptions: [
-          { label: 'Usable roof', value: roofDesc.sqFt },
-          { label: 'Roof orientation', value: 'South-facing' },
-          { label: 'Shading', value: shadeChipDesc },
-          { label: 'Usable sunlight', value: `~${sunHours} hr/day` },
-          { label: 'Install cost', value: `$${(COST_PER_KW / 1000).toFixed(2)}/W typical` },
-        ],
-      },
+      (() => {
+        const roofChip = { label: 'Usable roof', value: roofDesc.sqFt };
+        const orientationChip = { label: 'Roof orientation', value: ORIENTATION_LABEL[orientation] };
+        const shadeChip = { label: 'Shading', value: shadeChipDesc };
+        const sunlightChip = { label: 'Usable sunlight', value: `~${sunHours} hr/day` };
+        const costChip = { label: 'Install cost', value: `$${installCostPerW.toFixed(2)}/W${refined ? '' : ' typical'}` };
+
+        // Not refined yet — same flat ASSUMPTIONS list as always.
+        if (!refined) {
+          return {
+            type: 'inputs' as const,
+            headline: 'ASSUMPTIONS',
+            assumptions: [roofChip, orientationChip, shadeChip, sunlightChip, costChip],
+          };
+        }
+
+        // Refined — split into fields the user actually answered ("YOUR
+        // INPUTS") vs fields they left as "keep the estimate" (folded back
+        // into "ASSUMPTIONS:" alongside "Usable sunlight", which is never
+        // asked and is always an estimate).
+        const provided = overrides?.provided;
+        const primary: { label: string; value: string }[] = [];
+        const secondary: { label: string; value: string }[] = [];
+        for (const [key, chip] of [
+          ['roof', roofChip],
+          ['orientation', orientationChip],
+          ['shade', shadeChip],
+          ['installCostPerW', costChip],
+        ] as const) {
+          (provided?.[key] ? primary : secondary).push(chip);
+        }
+        secondary.push(sunlightChip);
+
+        return {
+          type: 'inputs' as const,
+          headline: 'YOUR INPUTS',
+          assumptions: primary,
+          secondaryLabel: 'ASSUMPTIONS:',
+          secondaryChips: secondary,
+        };
+      })(),
       {
         type: 'neighborhood',
         count: 247,
@@ -432,34 +523,51 @@ export function computeEvMetrics(user: User): EvMetrics {
 
 // ─── EV Report builder ──────────────────────────────────────────────────────
 // Mirrors Figma 5600:11592 ("EV Report — EV-1: Standard Flat Rate") pixel-for-
-// pixel. Uses USER's bill where it makes sense for "today" numbers and a
-// fixed off-peak EV scenario for "with EV". Headline numbers (annual savings,
-// 7-year total, table values) are taken from the Figma so the rendered
-// result matches the design exactly.
+// pixel. Uses USER's bill where it makes sense for "today" numbers. When the
+// chat's EV flow has collected answers (miles/month, charge location, fuel
+// economy, off-peak willingness), every dollar figure below is derived from
+// them instead of the flat Figma defaults — that's what makes the report
+// visibly react to what the user picked. With no inputs (report opened
+// without running the flow), it falls back to the original fixed scenario
+// so the numbers still match the design exactly.
 
-export function buildEvReport(user: User): Report {
+const EV_DEFAULT_INPUTS: EvInputs = { milesPerMonth: 1200, charging: 'home', mpg: 28, offPeak: true };
+const GAS_PRICE_PER_GALLON = 3.89; // GasBuddy, ZIP 94103 — held fixed across scenarios
+const EV_EFFICIENCY_MI_PER_KWH = 3.5;
+const EV_RATE_HOME_OFFPEAK = 0.08;  // $/kWh — E-TOU-C overnight window
+const EV_RATE_HOME_ONPEAK  = 0.18;  // $/kWh — charging at home outside the off-peak window
+const EV_RATE_PUBLIC       = 0.30;  // $/kWh — public DC fast-charging premium
+
+export function buildEvReport(user: User, inputs?: EvInputs): Report {
+  const { milesPerMonth, charging, mpg, offPeak } = inputs ?? EV_DEFAULT_INPUTS;
+  const annualMiles = milesPerMonth * 12;
+
   // Today (gasoline car) costs
-  const annualFuelCost      = 2000;   // $/yr at 1,200 mi/mo, 28 mpg, $3.89/gal
-  const annualHomeElecToday = 1560;   // current bill electric portion ×12
+  const annualFuelCost      = Math.round((annualMiles / mpg) * GAS_PRICE_PER_GALLON);
+  const annualHomeElecToday = 1560;   // current bill electric portion ×12 — unaffected by the EV Q&A
   const annualEvChargeToday = 0;
   const totalToday          = annualFuelCost + annualHomeElecToday + annualEvChargeToday;
 
-  // With EV (on Electric Home TOU)
+  // With EV — charging cost depends on where + when the user charges
+  const annualKwhForEv = annualMiles / EV_EFFICIENCY_MI_PER_KWH;
+  const evRate =
+    charging === 'public' ? EV_RATE_PUBLIC : offPeak ? EV_RATE_HOME_OFFPEAK : EV_RATE_HOME_ONPEAK;
   const annualFuelCostEv      = 0;
-  const annualHomeElecEv      = 1680; // small daytime bump from EV plan
-  const annualEvCharge        = 330;  // overnight 8¢/kWh × ~4,100 kWh/yr
+  const annualHomeElecEv      = charging === 'home' ? 1680 : 1560; // small daytime bump only when charging at home
+  const annualEvCharge        = Math.round(annualKwhForEv * evRate);
   const totalEv               = annualFuelCostEv + annualHomeElecEv + annualEvCharge;
 
-  const annualSavings   = totalToday - totalEv;          // 1550
-  const sevenYearTotal  = annualSavings * 7;             // 10850
+  const annualSavings   = totalToday - totalEv;
+  const sevenYearTotal  = annualSavings * 7;
 
   // Rate-plan comparison (Figma 5581:5182) — independent of the totals above:
   // this section isolates the value of switching *rate plans* specifically,
-  // assuming the EV is already in the driveway either way.
-  const annualCostFlatWithEv   = 2300; // 1,560 base + ~740 naive EV charging at the 18¢/kWh flat rate
-  const annualCostTouWithEv    = totalEv; // 2,010 — ties back to the EV-on-best-rate total above
-  const annualCostTouShifted   = 1850; // a bit more usage nudged into the cheapest window
-  const ratePlanSwitchDelta    = annualCostTouShifted - annualCostFlatWithEv; // −450
+  // assuming the EV is already in the driveway either way (charged at home,
+  // on-peak flat rate vs the recommended EV time-of-use plan).
+  const annualCostFlatWithEv   = Math.round(1560 + annualKwhForEv * EV_RATE_HOME_ONPEAK);
+  const annualCostTouWithEv    = totalEv; // ties back to the EV-on-best-rate total above
+  const annualCostTouShifted   = Math.round(totalEv * 0.92); // a bit more usage nudged into the cheapest window
+  const ratePlanSwitchDelta    = annualCostTouShifted - annualCostFlatWithEv;
 
   // Bar chart segment colors
   const C_GASOLINE     = '#CE4257';   // Web/Red/600
@@ -625,14 +733,15 @@ export function buildEvReport(user: User): Report {
         type: 'inputs',
         headline: 'YOUR INPUTS',
         assumptions: [
-          { label: 'Monthly driving distance', value: '1,200 miles/month' },
-          { label: 'Home charging', value: '100%' },
-          { label: 'Current vehicle fuel economy', value: '28 mpg' },
-          { label: 'EV efficiency', value: '3.5 mi/kWh' },
+          { label: 'Monthly driving distance', value: `${milesPerMonth.toLocaleString()} miles/month` },
+          { label: charging === 'home' ? 'Home charging' : 'Public charging', value: '100%' },
+          { label: 'Current vehicle fuel economy', value: `${mpg} mpg` },
+          { label: 'EV efficiency', value: `${EV_EFFICIENCY_MI_PER_KWH} mi/kWh` },
+          { label: 'Off-peak charging', value: charging === 'home' ? (offPeak ? 'Yes' : 'No') : 'N/A' },
         ],
         secondaryLabel: 'ASSUMPTIONS:',
         secondaryChips: [
-          { label: 'Gasoline price', value: '$3.89/gal · ZIP 94103' },
+          { label: 'Gasoline price', value: `$${GAS_PRICE_PER_GALLON}/gal · ${user.zip}` },
         ],
       },
       {
@@ -1250,6 +1359,152 @@ export function buildOptimizerReport(user: User): Report {
           { question: 'What does Short Cycling Detected mean?', answer: 'Short cycling occurs when a heating or cooling system turns on and off more frequently than expected. Frequent cycling can reduce efficiency, increase equipment wear, and may indicate an issue worth investigating.' },
         ],
       },
+    ],
+  };
+}
+
+// buildOptimizerReportV2 — the "Analyse my latest bill" report. Same
+// appliance deep-dive + rate-plan sections as buildOptimizerReport, but this
+// customer is already on their best rate plan and has capital-investment
+// upgrades worth surfacing, so the summary card gains a third column and a
+// new "Small Tweaks" + "Capital Investments" pair of sections appears after
+// the rate-plan CTA. Per Figma 5401:4027 (HBO2).
+export function buildOptimizerReportV2(user: User): Report {
+  const base = buildOptimizerReport(user);
+  const donutSection = base.sections.find((s) => s.type === 'bill-donut')!;
+  const efficiencySection = base.sections.find((s) => s.type === 'efficiency-deepdive')!;
+  const ratePlanSection = base.sections.find((s) => s.type === 'rate-plan')!;
+  const ctaSection = base.sections.find((s) => s.type === 'cta-banner')!;
+  const faqSection = base.sections.find((s) => s.type === 'faq')!;
+
+  return {
+    ...base,
+    id: `optimizer-v2-report-${Date.now()}`,
+    sections: [
+      {
+        type: 'kpi-row',
+        hideEllipse: true,
+        kpis: [
+          { label: 'YOUR ANNUAL BILL', value: '$2,640', subtext: 'Last 12 months', accent: 'blue' },
+          { label: 'ANNUAL SAVINGS POTENTIAL', value: '$1,092', subtext: 'and up to $2,100/yr more with capital investments', accent: 'green', shadow: true },
+        ],
+      },
+      donutSection,
+      {
+        type: 'whats-included',
+        title: "What's Included in This Report",
+        description:
+          'This report identifies opportunities to reduce your energy bill through efficiency improvements, rate plan optimization, and long-term home upgrades.\nCapital investment savings are shown separately from annual savings totals.',
+        cards: [
+          {
+            icon: 'leaf',
+            title: 'Energy Efficiency',
+            description: 'Reduce energy waste across cooling, heating, water heating, Pool Pumps, and always-on devices.',
+            savingsLabel: 'Potential savings',
+            savingsAmount: '$672/year',
+          },
+          {
+            icon: 'price-tag',
+            title: 'Rate Plan Optimization',
+            description: "We analyzed available rate plans and confirmed you're already on the most cost-effective option.",
+            savingsLabel: 'Status',
+            savingsAmount: '✓ Already optimized',
+          },
+          {
+            icon: 'bar-chart',
+            title: 'Capital Investments',
+            description: 'Explore home upgrades, programs, and equipment improvements for long-term savings.',
+            savingsLabel: 'Potential savings',
+            savingsAmount: '$2,100/year',
+          },
+        ],
+      },
+      efficiencySection,
+      ratePlanSection,
+      ctaSection,
+      {
+        type: 'tweaks-grid',
+        label: 'SMALL TWEAKS TO SAVE MORE',
+        cards: [
+          {
+            icon: 'cooling',
+            title: 'Pre-cooling',
+            fromTime: 'Peak',
+            toTime: 'Mid-Peak',
+            toTone: 'mid-peak',
+            description: 'Cool your home before peak-priced hours begin, then let the temperature drift during peak-priced hours. Comfort barely changes — your bill does.',
+            savings: '$117/yr',
+          },
+          {
+            icon: 'pool',
+            title: 'Shift Pool Pump',
+            fromTime: 'Peak',
+            toTime: 'Off-Peak',
+            description: 'Schedule the pump to run during lower-priced hours instead of peak-priced hours. One timer change, permanent savings.',
+            savings: '$143/yr',
+          },
+          {
+            icon: 'ev',
+            title: 'Shift EV Charging',
+            fromTime: 'Peak',
+            toTime: 'Off-Peak',
+            description: 'Schedule charging to start during off-peak hours using your vehicle or charger app. Set it once & save every time you charge.',
+            savings: '$90/yr',
+          },
+        ],
+      },
+      {
+        type: 'capital-actions',
+        icon: 'bar-chart',
+        label: 'Capital Investments • Save Up to $2,100/year',
+        description: 'Explore home upgrades that can reduce energy costs and improve efficiency over time.',
+        cards: [
+          {
+            icon: 'thermometer',
+            title: 'Smart Thermostat Installation',
+            description: 'Your cooling usage is higher than similar homes, especially during peak hours. A smart thermostat can automate pre-cooling and scheduling to help reduce costs.',
+            stats: [
+              { label: 'Investment', value: '~$150–300' },
+              { label: 'Payback', value: '2–3 yrs' },
+              { label: 'Potential savings', value: '$120/yr', tone: 'savings' },
+            ],
+            ctaLabel: 'Check Utility Rebates',
+          },
+          {
+            icon: 'pool-pump',
+            title: 'Variable-speed Pool Pump',
+            description: 'Your Pool Pump energy costs are higher than typical homes with a pool. A variable-speed pump may reduce operating costs by matching pump speed to actual demand.',
+            stats: [
+              { label: 'Investment', value: '~$800–1,400' },
+              { label: 'Payback', value: '8–12 yrs' },
+              { label: 'Estimated savings¹', value: 'Up to $450/yr', tone: 'savings' },
+            ],
+            footnote: '¹ Based on ENERGY STAR® estimates for standard in-ground Pool Pumps. Actual savings vary by pool type, pump size, runtime, and electricity rates.',
+          },
+          {
+            icon: 'heating',
+            title: 'Heat Pump Upgrade',
+            description: 'Replace gas furnace or resistance heating with a heat pump — 2–3× more efficient than conventional systems.',
+            stats: [
+              { label: 'Investment', value: '~$4,000–8,000' },
+              { label: 'Payback', value: '7–10 yrs' },
+              { label: 'Potential savings', value: '$400/yr', tone: 'savings' },
+            ],
+          },
+          {
+            icon: 'solar',
+            title: 'Rooftop Solar — 8.4 kW',
+            description: 'Solar can significantly reduce electricity costs and may improve the economics of other energy upgrades. See your Solar report for details.',
+            stats: [
+              { label: 'Investment', value: '~$12,900 net' },
+              { label: 'Payback', value: '6.1 yrs' },
+              { label: 'Potential savings', value: '$2,100/yr', tone: 'savings' },
+            ],
+            ctaLabel: 'Get Solar Report',
+          },
+        ],
+      },
+      faqSection,
     ],
   };
 }

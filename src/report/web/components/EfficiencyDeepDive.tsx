@@ -1,14 +1,27 @@
 import type { EfficiencyDeepDiveSection, EfficiencyCategory, EfficiencyBlock } from '../../types';
+import {
+  HeatingFlame1Icon, HeatingFlame2Icon, HeatingFlame3Icon, HeatingBaseIcon,
+  CoolingIcon, AlwaysOnIcon, PoolPumpIcon, WaterHeatingIcon,
+  SetpointThumbIcon, WarnTriangleIcon, ArrowUpRightIcon, FlagIcon, LeafIcon,
+  TodNightIcon, TodMorningIcon, TodAfternoonIcon, TodEveningIcon,
+} from './icons/OptimizerIcons';
 
 interface Props {
   section: EfficiencyDeepDiveSection;
 }
 
-const CATEGORY_ICON: Record<Exclude<EfficiencyCategory['icon'], 'heating'>, string> = {
-  cooling: '/optimizer/icon_cooling.svg',
-  'always-on': '/optimizer/icon_always_on.svg',
-  'pool-pump': '/optimizer/icon_pool_pump.svg',
-  'water-heating': '/optimizer/icon_water_heating.svg',
+const CATEGORY_ICON: Record<Exclude<EfficiencyCategory['icon'], 'heating'>, typeof LeafIcon> = {
+  cooling: CoolingIcon,
+  'always-on': AlwaysOnIcon,
+  'pool-pump': PoolPumpIcon,
+  'water-heating': WaterHeatingIcon,
+};
+
+const TOD_ICON: Record<'tod_night' | 'tod_morning' | 'tod_afternoon' | 'tod_evening', typeof LeafIcon> = {
+  tod_night: TodNightIcon,
+  tod_morning: TodMorningIcon,
+  tod_afternoon: TodAfternoonIcon,
+  tod_evening: TodEveningIcon,
 };
 
 // Composite flame + base icon — identical inset math to the HBA report's
@@ -16,10 +29,10 @@ const CATEGORY_ICON: Record<Exclude<EfficiencyCategory['icon'], 'heating'>, stri
 function HeatingIcon() {
   return (
     <span className="relative w-6 h-6 shrink-0">
-      <img src="/optimizer/heating_flame1.svg" alt="" className="absolute" style={{ top: 2.81, left: 13.96, width: 2.12, height: 4.43 }} />
-      <img src="/optimizer/heating_flame2.svg" alt="" className="absolute" style={{ top: 2.81, left: 10.81, width: 2.12, height: 4.43 }} />
-      <img src="/optimizer/heating_flame3.svg" alt="" className="absolute" style={{ top: 2.81, left: 7.66, width: 2.12, height: 4.43 }} />
-      <img src="/optimizer/heating_base.svg" alt="" className="absolute" style={{ top: 7.52, left: 1.5, width: 21, height: 14.98 }} />
+      <HeatingFlame1Icon className="absolute" style={{ top: 2.81, left: 13.96, width: 2.12, height: 4.43 }} />
+      <HeatingFlame2Icon className="absolute" style={{ top: 2.81, left: 10.81, width: 2.12, height: 4.43 }} />
+      <HeatingFlame3Icon className="absolute" style={{ top: 2.81, left: 7.66, width: 2.12, height: 4.43 }} />
+      <HeatingBaseIcon className="absolute" style={{ top: 7.52, left: 1.5, width: 21, height: 14.98 }} />
     </span>
   );
 }
@@ -65,18 +78,23 @@ function HourlyChart({ color }: { color: string }) {
         <span>12 AM</span><span>4 AM</span><span>8 AM</span><span>12 PM</span><span>4 PM</span><span>8 PM</span><span>12 AM</span>
       </div>
       <div className="flex justify-between pt-4 px-2 pl-[95px] mt-8">
-        {[
-          { icon: 'tod_night', label: 'Night', w: 18 },
-          { icon: 'tod_morning', label: 'Morning', w: 22 },
-          { icon: 'tod_afternoon', label: 'Afternoon', w: 22 },
-          { icon: 'tod_evening', label: 'Evening', w: 20 },
-          { icon: 'tod_night', label: 'Night', w: 18 },
-        ].map((t, i) => (
-          <div key={i} className="flex flex-col gap-1 items-center">
-            <img src={`/optimizer/${t.icon}.svg`} alt="" style={{ width: t.w, height: t.w === 20 ? 16 : t.w }} />
-            <span className="text-[12px] text-[#191C1E]">{t.label}</span>
-          </div>
-        ))}
+        {(
+          [
+            { icon: 'tod_night', label: 'Night', w: 18 },
+            { icon: 'tod_morning', label: 'Morning', w: 22 },
+            { icon: 'tod_afternoon', label: 'Afternoon', w: 22 },
+            { icon: 'tod_evening', label: 'Evening', w: 20 },
+            { icon: 'tod_night', label: 'Night', w: 18 },
+          ] as const
+        ).map((t, i) => {
+          const TodIcon = TOD_ICON[t.icon];
+          return (
+            <div key={i} className="flex flex-col gap-1 items-center">
+              <TodIcon style={{ width: t.w, height: t.w === 20 ? 16 : t.w }} />
+              <span className="text-[12px] text-[#191C1E]">{t.label}</span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -112,7 +130,7 @@ function Setpoint({ block }: { block: Extract<EfficiencyBlock, { kind: 'setpoint
           }}
         >
           <div className="absolute w-[46px] h-[46px] -top-[5px]" style={{ left: `calc(${leftPct}% - 23px)` }}>
-            <img src="/optimizer/setpoint_thumb.svg" alt="" className="w-full h-full" />
+            <SetpointThumbIcon className="w-full h-full" />
           </div>
         </div>
         <div className="relative" style={{ height: 39 }}>
@@ -137,7 +155,7 @@ function Saturation({ block }: { block: Extract<EfficiencyBlock, { kind: 'satura
       <div className="bg-[#FCE7E5] rounded-lg p-5 flex flex-col gap-5">
         <div className="flex gap-3.5 items-center">
           <div className="flex-1 flex flex-col gap-2">
-            <img src="/optimizer/icon_warn_triangle.svg" alt="" className="w-6 h-6" />
+            <WarnTriangleIcon className="w-6 h-6" />
             <h4 className="text-[14px] font-semibold text-[#000000] m-0">{block.title}</h4>
             <p className="text-[14px] leading-[20px] text-[#000000] m-0">{block.description}</p>
           </div>
@@ -233,7 +251,7 @@ function GreenList({ block }: { block: Extract<EfficiencyBlock, { kind: 'green-l
         <div key={i} className="px-6 py-4 flex gap-4 items-center">
           {item.hasArrow && (
             <span className="w-6 h-6 shrink-0 rotate-90">
-              <img src="/optimizer/icon_arrow_up_right.svg" alt="" className="w-6 h-6" />
+              <ArrowUpRightIcon className="w-6 h-6" />
             </span>
           )}
           <div className="flex-1 flex flex-col gap-1">
@@ -275,7 +293,7 @@ function Block({ block }: { block: EfficiencyBlock }) {
     case 'confirm-flag':
       return (
         <div className="flex gap-2 items-center py-2">
-          <img src="/optimizer/icon_flag.svg" alt="" className="w-5 h-5" />
+          <FlagIcon className="w-5 h-5" />
           <span className="text-[14px] text-[#000000] underline">{block.label}</span>
         </div>
       );
@@ -288,7 +306,11 @@ function Category({ category }: { category: EfficiencyCategory }) {
   return (
     <>
       <div className="flex gap-4 items-center py-6 pb-2">
-        {category.icon === 'heating' ? <HeatingIcon /> : <img src={CATEGORY_ICON[category.icon]} alt="" className="w-6 h-6 shrink-0" />}
+        {(() => {
+          if (category.icon === 'heating') return <HeatingIcon />;
+          const CatIcon = CATEGORY_ICON[category.icon];
+          return <CatIcon className="w-6 h-6 shrink-0" />;
+        })()}
         <span className="text-[12px] leading-[16px] font-semibold text-[#262E40] uppercase whitespace-nowrap">{category.label}</span>
         <div className="flex-1 h-px bg-[#DFDFE0]" />
       </div>
@@ -317,7 +339,7 @@ export function EfficiencyDeepDive({ section }: Props) {
   return (
     <div className="bg-white border border-[#F7F7F7] rounded-[14px] p-8 flex flex-col w-full">
       <div className="flex flex-col gap-2 pr-[120px]">
-        <img src="/optimizer/icon_leaf.svg" alt="" className="w-12 h-12" />
+        <LeafIcon className="w-12 h-12" />
         <h2 className="text-[24px] leading-[28px] font-bold text-[#000000] m-0">{section.bannerTitle}</h2>
         <p className="text-[14px] leading-[20px] text-[#262E40] m-0">{section.bannerDescription}</p>
       </div>

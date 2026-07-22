@@ -9,6 +9,7 @@ import RatePanel from './RatePanel';
 import RatePlanPanel from './RatePlanPanel';
 import OptimizerPanel from './OptimizerPanel';
 import BillToolPlaceholderPanel from './BillToolPlaceholderPanel';
+import HighBillAnalyzerPanel from './HighBillAnalyzerPanel';
 import MonthlySummaryWidget from '@/components/widgets/miraki/MonthlySummaryWidget';
 import EnergyDetailsWidget from '@/components/widgets/miraki/EnergyDetailsWidget';
 
@@ -28,6 +29,7 @@ export default function RightPanel() {
       case 'monthly-summary':   return <MonthlySummaryWidget />;
       case 'energy-details':    return <EnergyDetailsWidget />;
       case 'bill-tool':         return <BillToolPlaceholderPanel title={panelTitle || 'Widget'} />;
+      case 'high-bill-analyzer': return <HighBillAnalyzerPanel />;
       default:              return null;
     }
   }
@@ -41,7 +43,8 @@ export default function RightPanel() {
     || activePanel === 'ev'
     || activePanel === 'bill-report'
     || activePanel === 'optimizer'
-    || activePanel === 'rate-report';
+    || activePanel === 'rate-report'
+    || activePanel === 'high-bill-analyzer';
 
   return (
     <div className={`right-panel-inner${isReportMode ? ' report-canvas-mode' : ''}`}>

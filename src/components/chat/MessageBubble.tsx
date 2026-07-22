@@ -3,6 +3,7 @@
 import { useChatStore } from '@/lib/chat/store';
 import { advanceFlowStep } from '@/lib/chat/flows/advance';
 import { getEvStep } from '@/lib/chat/flows/ev';
+import { getSolarRefineStep } from '@/lib/chat/flows/solar';
 import { dispatchInput } from '@/lib/chat/responses';
 import type { ChatMessage, MessageOption } from '@/lib/chat/types';
 import ChatWidgetRenderer from './widgets/ChatWidgetRenderer';
@@ -61,6 +62,8 @@ export default function MessageBubble({ message, isLast }: Props) {
     advanceFlow,
     setFlow,
     resetFlow,
+    setEvInputs,
+    setSolarInputs,
   } = useChatStore();
 
   function handleOption(opt: MessageOption) {
@@ -81,6 +84,8 @@ export default function MessageBubble({ message, isLast }: Props) {
       if (advanced) {
         advanceFlow(advanced.nextStep, advanced.nextData);
         addMessage(advanced.message);
+        if (advanced.evInputs) setEvInputs(advanced.evInputs);
+        if (advanced.solarInputs) setSolarInputs(advanced.solarInputs);
         if (advanced.done) resetFlow();
         if (advanced.openPanel) openPanel(advanced.openPanel.key, advanced.openPanel.title);
         return;
@@ -99,8 +104,12 @@ export default function MessageBubble({ message, isLast }: Props) {
       if (result.startFlow === 'ev') {
         setFlow('ev', 0, {});
         addMessage(getEvStep(0, {}));
+      } else if (result.startFlow === 'solar') {
+        setFlow('solar', 0, {});
+        addMessage(getSolarRefineStep(0, {}));
       } else {
         addMessage(result.message);
+        if (result.followUp) addMessage(result.followUp);
         if (result.openPanel) openPanel(result.openPanel.key, result.openPanel.title);
       }
     }, 600);

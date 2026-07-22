@@ -12,11 +12,17 @@ import { ReportWebView } from '@/report/web/ReportWebView';
 // pipeline as the solar / bill explainer reports. The panel just wires the
 // report data, the PDF download handler, and the scroll container — all
 // section rendering lives in ReportWebView.
+//
+// Numbers come from the EV chat flow's collected answers (evInputs) when
+// available, so the report reflects exactly what the user picked; falls
+// back to the fixed Figma-default scenario if the panel is somehow opened
+// without running the flow.
 export default function EvPanel() {
   const reportRef = useRef<HTMLDivElement>(null);
   const setPanelDownloadHandler = useChatStore((s) => s.setPanelDownloadHandler);
+  const evInputs = useChatStore((s) => s.evInputs);
 
-  const report = useMemo(() => buildEvReport(USER), []);
+  const report = useMemo(() => buildEvReport(USER, evInputs ?? undefined), [evInputs]);
 
   useEffect(() => {
     setPanelDownloadHandler(async () => {

@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HBA Report — By Cause</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink-900: #0B1220;
+    --text-secondary: #2A3347;
+    --foreground-400: #66758D;
+    --ink-500: #5B6578;
+    --surface-subtle: #F0F0F2;
+    --background-500: #DFDFE0;
+    --warn-fg: #8A3A00;
+    --dominant-fg: #B91C1C;
+    --analyzed-cycle: #125AAA;
+    --prev-bill-cycle: #FFDC9B;
+    --prev-year: #B8B8FF;
+    --factor-bill-goesup: #FEE2E2;
+    --chart-gray: #CBD5E1;
+    --muted-gray-text: #928DA9;
+    --report-shadow: 0px 2px 4px 0px rgba(40,41,61,0.01), 0px 4px 32px 16px rgba(96,97,112,0.01);
+    --card-shadow: 0px 6px 14px 0px rgba(17,24,39,0.06);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 40px 0;
+    background: #e5e7eb;
+    font-family: 'Montserrat', sans-serif;
+  }
+
+  .report {
+    width: 794px;
+    flex-shrink: 0;
+    margin: 0 auto;
+    background: #FBFBFC;
+    border-radius: 20px;
+    box-shadow: 0px 6px 60px 0px rgba(0,0,0,0.25);
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    overflow: hidden;
+  }
+
+  /* ---------- Header ---------- */
+  .header {
+    background: #FFFFFF;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 34px 36px 28px;
+  }
+  .logo {
+    background: #186CDD;
+    height: 36px;
+    width: 154px;
+    border-radius: 43px;
+    display: flex;
+    align-items: center;
+    padding-left: 13px;
+    gap: 8px;
+  }
+  .logo img.bulb { width: 24px; height: 25px; }
+  .logo img.wordmark { width: 83px; height: 17px; }
+  .header-user {
+    text-align: right;
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--foreground-400);
+  }
+  .header-user .name {
+    font-weight: 600;
+    color: #000000;
+  }
+
+  /* ---------- Intro ---------- */
+  .intro {
+    padding: 24px 32px;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .intro h1 {
+    font-weight: 700;
+    font-size: 28px;
+    line-height: 32px;
+    color: var(--ink-900);
+    margin: 0;
+  }
+  .intro p {
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--text-secondary);
+    margin: 0;
+  }
+
+  /* ---------- Stat cards ---------- */
+  .section { padding: 0 32px; }
+  .section.top { padding: 32px 32px 24px; }
+  .stat-cards {
+    display: flex;
+    gap: 16px;
+    align-items: stretch;
+  }
+  .stat-card {
+    flex: 1 0 0;
+    min-height: 148px;
+    border-radius: 14px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .stat-card.analyzed { background: var(--analyzed-cycle); }
+  .stat-card.prev-cycle { background: var(--prev-bill-cycle); box-shadow: var(--card-shadow); }
+  .stat-card.prev-year { background: var(--prev-year); box-shadow: var(--card-shadow); }
+  .stat-card .label {
+    font-weight: 600;
+    font-size: 12px;
+    line-height: 16px;
+  }
+  .stat-card.analyzed .label { color: #FFFFFF; }
+  .stat-card.prev-cycle .label,
+  .stat-card.prev-year .label { color: var(--ink-900); }
+  .stat-card .value-row { display: flex; gap: 12px; align-items: center; }
+  .stat-card .value {
+    font-weight: 700;
+    font-size: 36px;
+    line-height: 44px;
+  }
+  .stat-card.analyzed .value { color: #FFFFFF; }
+  .stat-card.prev-cycle .value,
+  .stat-card.prev-year .value { color: #000000; }
+  .stat-card .delta-pill {
+    background: #FFFFFF;
+    color: var(--warn-fg);
+    font-weight: 600;
+    font-size: 12px;
+    line-height: 16px;
+    padding: 4px 8px;
+    border-radius: 6px;
+  }
+  .stat-card .sub {
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 16px;
+  }
+  .stat-card.analyzed .sub { color: #FFFFFF; }
+  .stat-card.prev-cycle .sub,
+  .stat-card.prev-year .sub { color: var(--text-secondary); }
+
+  /* ---------- Trend chart ---------- */
+  .trend-wrap { padding: 12px 32px 24px; }
+  .trend-card {
+    background: #FFFFFF;
+    border: 1px solid #E7E7E7;
+    border-radius: 10px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .trend-head {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+  .trend-head .left {
+    flex: 1 0 0;
+    font-weight: 600;
+    font-size: 12px;
+    line-height: 16px;
+    color: rgba(28,28,30,0.72);
+  }
+  .trend-head .right {
+    flex: 1 0 0;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--muted-gray-text);
+    text-align: right;
+  }
+  .trend-bars {
+    display: flex;
+    gap: 6px;
+    align-items: flex-end;
+    height: 160px;
+    overflow: hidden;
+  }
+  .trend-col {
+    flex: 1 0 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    height: 140px;
+  }
+  .trend-col.tall { height: 162px; }
+  .trend-col .bar-label {
+    display: flex;
+    justify-content: center;
+    padding: 4px 0;
+    width: 100%;
+  }
+  .trend-col .bar-label span {
+    padding: 4px;
+    border-radius: 4px;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 16px;
+    color: #1C1C1E;
+    white-space: nowrap;
+  }
+  .trend-col.tall.blue .bar-label span { font-weight: 600; color: #001366; background: rgba(155,175,255,0.1); }
+  .trend-col.purple .bar-label span { background: rgba(184,184,255,0.25); }
+  .trend-col.tall.orange .bar-label span { background: rgba(255,220,155,0.25); }
+  .trend-col .bar {
+    width: 22px;
+    border-radius: 4px;
+    background: var(--chart-gray);
+  }
+  .trend-col.purple .bar { background: var(--prev-year); }
+  .trend-col.orange .bar { background: var(--prev-bill-cycle); }
+  .trend-col.blue .bar { background: var(--analyzed-cycle); }
+
+  .trend-xaxis {
+    display: flex;
+    gap: 6px;
+    text-align: center;
+  }
+  .trend-xaxis .col {
+    flex: 1 0 0;
+    min-width: 0;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--muted-gray-text);
+  }
+  .trend-xaxis .col.bold { font-weight: 700; color: var(--ink-900); }
+  .trend-xaxis .col .year { display: block; }
+
+  .trend-legend {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    justify-content: center;
+  }
+  .trend-legend .item { display: flex; gap: 6px; align-items: center; }
+  .trend-legend .swatch { width: 12px; height: 12px; border-radius: 4px; }
+  .trend-legend .swatch.purple { background: var(--prev-year); }
+  .trend-legend .swatch.orange { background: var(--prev-bill-cycle); }
+  .trend-legend .swatch.blue { background: var(--analyzed-cycle); }
+  .trend-legend span.label {
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--muted-gray-text);
+  }
+
+  /* ---------- Footer note (mid-page) ---------- */
+  .prepared-note {
+    padding: 0 32px 24px;
+    display: flex;
+    justify-content: center;
+    text-align: center;
+  }
+  .prepared-note p {
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--ink-500);
+    margin: 0;
+  }
+
+  /* ---------- Why breakdown card ---------- */
+  .breakdown-wrap { padding: 12px 32px 24px; }
+  .breakdown-card {
+    background: #FFFFFF;
+    border-radius: 14px;
+    box-shadow: var(--report-shadow);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  .breakdown-head { display: flex; flex-direction: column; gap: 4px; }
+  .breakdown-head h2 {
+    font-weight: 600;
+    font-size: 20px;
+    line-height: 24px;
+    color: #000000;
+    margin: 0;
+  }
+  .breakdown-head p {
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--text-secondary);
+    margin: 0;
+  }
+
+  .drivers { display: flex; flex-direction: column; gap: 20px; }
+
+  .driver-block {
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+  }
+  .driver-block.non-weather { background: var(--factor-bill-goesup); gap: 16px; }
+  .driver-block.plain { background: #FBFBFC; border-top: 1px solid var(--surface-subtle); }
+  .driver-block.plain.gapped { gap: 16px; }
+
+  .driver-head-row {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    width: 100%;
+  }
+  .driver-head-row .content { flex: 1 0 0; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+  .driver-head-row .title-line { display: flex; gap: 8px; align-items: center; }
+  .driver-head-row .title-line .title,
+  .driver-head-row .title {
+    font-weight: 600;
+    font-size: 16px;
+    line-height: 24px;
+    color: var(--ink-900);
+    white-space: nowrap;
+  }
+  .badge-dominant {
+    background: #FFFFFF;
+    color: var(--dominant-fg);
+    font-weight: 600;
+    font-size: 12px;
+    line-height: 16px;
+    padding: 4px 12px;
+    border-radius: 32px;
+  }
+  .driver-head-row .desc {
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--text-secondary);
+    margin: 0;
+  }
+  .driver-head-row .amount {
+    font-weight: 600;
+    font-size: 16px;
+    line-height: 24px;
+    color: var(--ink-900);
+    width: 64px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  .row {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    border-top: 1px dashed var(--background-500);
+    width: 100%;
+  }
+  .row.py16 { padding: 16px 0; }
+  .row.py11 { padding: 11px 0; }
+  .row.indent { padding-left: 40px; }
+
+  .icon-arrow-sm {
+    width: 16px;
+    height: 17.5px;
+    transform: rotate(90deg);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .icon-arrow-sm img { width: 16px; height: 17.5px; }
+  .icon-arrow-lg {
+    width: 24px;
+    height: 24px;
+    transform: rotate(90deg);
+    flex-shrink: 0;
+  }
+  .icon-arrow-lg img { width: 24px; height: 24px; }
+  .icon-cat { width: 24px; height: 24px; flex-shrink: 0; position: relative; }
+  .icon-cat img { width: 24px; height: 24px; display: block; }
+
+  /* composite heating icon */
+  .icon-heating { width: 24px; height: 24px; flex-shrink: 0; position: relative; }
+  .icon-heating .inner { position: absolute; inset: 6.25%; }
+  .icon-heating .flame { position: absolute; }
+  .icon-heating .flame img { width: 100%; height: 100%; display: block; }
+  .icon-heating .base { position: absolute; inset: 31.35% 6.25% 6.25% 6.25%; }
+  .icon-heating .base img { width: 100%; height: 100%; display: block; }
+
+  .row-text { flex: 1 0 0; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .row-text .title {
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--ink-900);
+    white-space: nowrap;
+    margin: 0;
+  }
+  .row-text .desc {
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--foreground-400);
+    margin: 0;
+  }
+  .row-text .desc.secondary { color: var(--text-secondary); }
+  .row-text .flag-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding: 4px 0;
+  }
+  .row-text .flag-row img { width: 20px; height: 20px; }
+  .row-text .flag-row span {
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 20px;
+    color: #000000;
+    text-decoration: underline;
+  }
+
+  .row .amount {
+    width: 64px;
+    text-align: right;
+    flex-shrink: 0;
+    font-weight: 400;
+  }
+  .row .amount.lg16 { font-size: 16px; line-height: 24px; color: var(--ink-900); }
+  .row .amount.sm14gray { font-size: 14px; line-height: 20px; color: var(--foreground-400); }
+  .row .amount.sm14sec { font-size: 14px; line-height: 20px; color: var(--text-secondary); }
+</style>
+</head>
+<body>
+<div class="report">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="logo">
+      <img class="bulb" src="assets/bulb_group.svg" alt="" />
+      <img class="wordmark" src="assets/energyco_logo.svg" alt="Energy Co." />
+    </div>
+    <div class="header-user">
+      <div class="name">Sarah Mitchell</div>
+      <div>ZIP 94103</div>
+    </div>
+  </div>
+
+  <!-- Intro -->
+  <div class="intro">
+    <h1>Your bill this month is $87 higher than previous bill cycle — here's what drove it.</h1>
+    <p>We compared your bill with your previous bill cycle and the same period last year. We found your costs were significantly higher than your previous bill cycle.</p>
+  </div>
+
+  <!-- Stat cards -->
+  <div class="section top">
+    <div class="stat-cards">
+      <div class="stat-card analyzed">
+        <span class="label">ANALYSED CYCLE</span>
+        <div class="value-row"><span class="value">$312</span></div>
+        <span class="sub">Mar 12 – Apr 11, 2026</span>
+      </div>
+      <div class="stat-card prev-cycle">
+        <span class="label">VS. PREVIOUS BILL CYCLE</span>
+        <div class="value-row">
+          <span class="value">+$87</span>
+          <span class="delta-pill">+38.7%</span>
+        </div>
+        <span class="sub">Previous bill cycle was $225</span>
+      </div>
+      <div class="stat-card prev-year">
+        <span class="label">VS. SAME TIME PREVIOUS YEAR</span>
+        <div class="value-row">
+          <span class="value">+$28</span>
+          <span class="delta-pill">+9.9%</span>
+        </div>
+        <span class="sub">Previous year was $284</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Trend chart -->
+  <div class="trend-wrap">
+    <div class="trend-card">
+      <div class="trend-head">
+        <span class="left">USAGE HISTORY — LAST 13 MONTHS</span>
+        <span class="right">Labels indicate the bill cycle end month.</span>
+      </div>
+
+      <div class="trend-bars">
+        <div class="trend-col purple">
+          <div class="bar-label"><span>$284</span></div>
+          <div class="bar" style="height:84px;"></div>
+        </div>
+        <div class="trend-col"><div class="bar" style="height:92px;"></div></div>
+        <div class="trend-col"><div class="bar" style="height:109px;"></div></div>
+        <div class="trend-col"><div class="bar" style="height:121px;"></div></div>
+        <div class="trend-col"><div class="bar" style="height:130px;"></div></div>
+        <div class="trend-col"><div class="bar" style="height:114px;"></div></div>
+        <div class="trend-col"><div class="bar" style="height:87px;"></div></div>
+        <div class="trend-col"><div class="bar" style="height:72px;"></div></div>
+        <div class="trend-col"><div class="bar" style="height:79px;"></div></div>
+        <div class="trend-col"><div class="bar" style="height:87px;"></div></div>
+        <div class="trend-col"><div class="bar" style="height:82px;"></div></div>
+        <div class="trend-col tall orange">
+          <div class="bar-label"><span>$225</span></div>
+          <div class="bar" style="height:66px;"></div>
+        </div>
+        <div class="trend-col tall blue">
+          <div class="bar-label"><span>$312</span></div>
+          <div class="bar" style="height:92px;"></div>
+        </div>
+      </div>
+
+      <div class="trend-xaxis">
+        <div class="col">Apr</div>
+        <div class="col">May</div>
+        <div class="col">Jun</div>
+        <div class="col">Jul</div>
+        <div class="col">Aug</div>
+        <div class="col">Sep</div>
+        <div class="col">Oct</div>
+        <div class="col">Nov</div>
+        <div class="col">Dec<span class="year">2025</span></div>
+        <div class="col">Jan<span class="year">2026</span></div>
+        <div class="col">Feb</div>
+        <div class="col">Mar</div>
+        <div class="col bold">Apr</div>
+      </div>
+
+      <div class="trend-legend">
+        <div class="item"><span class="swatch purple"></span><span class="label">Same time Previous Year</span></div>
+        <div class="item"><span class="swatch orange"></span><span class="label">Previous Bill Cycle</span></div>
+        <div class="item"><span class="swatch blue"></span><span class="label">Analyzed Bill Cycle</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Prepared for note (mid-page, per design) -->
+  <div class="prepared-note">
+    <p>Prepared for Sarah Mitchell · April 14, 2026 · Energy.Co</p>
+  </div>
+
+  <!-- Why breakdown -->
+  <div class="breakdown-wrap">
+    <div class="breakdown-card">
+      <div class="breakdown-head">
+        <h2>Why $87 Up over previous bill cycle</h2>
+        <p>The breakdown below focuses on the comparison to previous bill cycle because it represents the larger change in your bill.</p>
+      </div>
+
+      <div class="drivers">
+
+        <!-- Non-Weather Consumption -->
+        <div class="driver-block non-weather">
+          <div class="driver-head-row">
+            <div class="content">
+              <div class="title-line">
+                <span class="title">Non-Weather Consumption</span>
+                <span class="badge-dominant">DOMINANT CAUSE</span>
+              </div>
+              <p class="desc">Always-on devices used 72 kWh more this cycle. Common sources include refrigerators, networking equipment, and standby electronics. Some of this usage may be reduced through small behavior changes.</p>
+            </div>
+            <span class="amount">+$41</span>
+          </div>
+
+          <div class="row py16">
+            <span class="icon-arrow-sm"><img src="assets/vector.svg" alt="" /></span>
+            <span class="icon-heating">
+              <span class="inner">
+                <span class="flame" style="top:6.25%; right:30.55%; bottom:72.64%; left:59.34%;"><img src="assets/vector1.svg" alt="" /></span>
+                <span class="flame" style="top:6.25%; right:45.55%; bottom:72.64%; left:44.34%;"><img src="assets/vector2.svg" alt="" /></span>
+                <span class="flame" style="top:6.25%; right:60.55%; bottom:72.64%; left:29.34%;"><img src="assets/vector3.svg" alt="" /></span>
+              </span>
+              <span class="base"><img src="assets/group1.svg" alt="" /></span>
+            </span>
+            <div class="row-text">
+              <p class="title">Heating</p>
+              <p class="desc">Heating used more energy than expected this cycle.</p>
+            </div>
+            <span class="amount lg16">+$17</span>
+          </div>
+
+          <div class="row py11 indent">
+            <span class="icon-arrow-lg"><img src="assets/arrow_up_right.svg" alt="" /></span>
+            <div class="row-text">
+              <p class="title">Heating Runtime</p>
+              <p class="desc">Your heating system ran longer than expected this cycle.</p>
+            </div>
+            <span class="amount sm14gray">+$10</span>
+          </div>
+
+          <div class="row py11 indent">
+            <span class="icon-arrow-lg"><img src="assets/arrow_up_right.svg" alt="" /></span>
+            <div class="row-text">
+              <p class="title">Heating Inefficiency</p>
+              <p class="desc">Reduced heater efficiency increased energy required to maintain comfort.</p>
+            </div>
+            <span class="amount sm14gray">+$7</span>
+          </div>
+
+          <div class="row py16">
+            <span class="icon-arrow-sm"><img src="assets/vector.svg" alt="" /></span>
+            <span class="icon-cat"><img src="assets/always_on.svg" alt="" /></span>
+            <div class="row-text">
+              <p class="title">Always-On</p>
+              <p class="desc">Devices that run continuously used more energy than expected, including networking equipment, standby electronics, and other always-on devices.</p>
+            </div>
+            <span class="amount lg16">+$7</span>
+          </div>
+
+          <div class="row py16">
+            <span class="icon-arrow-sm"><img src="assets/vector.svg" alt="" /></span>
+            <span class="icon-cat"><img src="assets/electric_vehicle.svg" alt="" /></span>
+            <div class="row-text">
+              <p class="title">EV</p>
+              <p class="desc">Additional EV charging increased electricity consumption this cycle.</p>
+              <div class="flag-row"><img src="assets/flag.svg" alt="" /><span>Confirm you have an EV</span></div>
+            </div>
+            <span class="amount lg16">+$5</span>
+          </div>
+
+          <div class="row py16">
+            <span class="icon-arrow-sm"><img src="assets/vector.svg" alt="" /></span>
+            <span class="icon-cat"><img src="assets/other_electric.svg" alt="" /></span>
+            <div class="row-text">
+              <p class="title">Other</p>
+              <p class="desc">Smaller increases across several appliances added to your bill.</p>
+            </div>
+            <span class="amount lg16">+$12</span>
+          </div>
+        </div>
+
+        <!-- Weather-Driven Consumption -->
+        <div class="driver-block plain">
+          <div class="driver-head-row">
+            <div class="content">
+              <div class="title-line"><span class="title">Weather-Driven Consumption</span></div>
+              <p class="desc">Average outdoor temperatures were 6°F higher this cycle. Our analysis estimates weather-driven cooling demand contributed approximately 32 kWh of additional AC consumption.</p>
+            </div>
+            <span class="amount">+$11</span>
+          </div>
+
+          <div class="row py11">
+            <span class="icon-arrow-lg"><img src="assets/arrow_up_right.svg" alt="" /></span>
+            <div class="row-text">
+              <p class="title">Heating</p>
+              <p class="desc secondary">Average outdoor temperatures were 6°F lower than the previous billing cycle, increasing heating demand.</p>
+            </div>
+            <span class="amount sm14sec">+$11</span>
+          </div>
+        </div>
+
+        <!-- Rate-Driven -->
+        <div class="driver-block plain">
+          <div class="row py16" style="border-top:none;">
+            <div class="row-text" style="gap:8px;">
+              <p class="title" style="font-weight:600; font-size:16px; line-height:24px;">Rate-Driven</p>
+              <p class="desc">Your rate plan changed this cycle, and your average rate went from 18¢ to 21¢ per kWh. We estimate this change increased your bill by about $20.</p>
+            </div>
+            <span class="amount lg16" style="align-self:flex-start;">+$24</span>
+          </div>
+
+          <div class="row py16">
+            <span class="icon-arrow-sm"><img src="assets/vector.svg" alt="" /></span>
+            <div class="row-text">
+              <p class="title">Peak Consumption Increase</p>
+              <p class="desc">More electricity was used during peak-priced hours than expected, increasing your bill.</p>
+            </div>
+            <span class="amount lg16">+$24</span>
+          </div>
+
+          <div class="row py11 indent">
+            <span class="icon-arrow-lg"><img src="assets/arrow_up_right.svg" alt="" /></span>
+            <div class="row-text">
+              <p class="title">Heating</p>
+              <p class="desc">A larger share of heating usage occurred during peak-priced hours.</p>
+            </div>
+            <span class="amount sm14gray">+$11</span>
+          </div>
+
+          <div class="row py11 indent">
+            <span class="icon-arrow-lg"><img src="assets/arrow_up_right.svg" alt="" /></span>
+            <div class="row-text">
+              <p class="title">EV</p>
+              <p class="desc">More charging occurred during higher-priced evening hours.</p>
+            </div>
+            <span class="amount sm14gray">+$7</span>
+          </div>
+
+          <div class="row py11 indent">
+            <span class="icon-arrow-lg"><img src="assets/arrow_up_right.svg" alt="" /></span>
+            <div class="row-text">
+              <p class="title">Pool-Pump</p>
+              <p class="desc">Pump operation shifted toward peak-priced periods.</p>
+              <div class="flag-row"><img src="assets/flag.svg" alt="" /><span>Confirm you have a Pool Pump</span></div>
+            </div>
+            <span class="amount sm14gray">+$4</span>
+          </div>
+
+          <div class="row py11 indent">
+            <span class="icon-arrow-lg"><img src="assets/arrow_up_right.svg" alt="" /></span>
+            <div class="row-text">
+              <p class="title">Other</p>
+              <p class="desc">Smaller increases across several appliances added to peak-hour consumption.</p>
+            </div>
+            <span class="amount sm14gray">+$2</span>
+          </div>
+        </div>
+
+        <!-- Consumption days -->
+        <div class="driver-block plain gapped">
+          <div class="driver-head-row" style="border-top:none;">
+            <div class="content" style="gap:8px;">
+              <p class="title" style="font-weight:600; font-size:16px; line-height:24px;">Consumption days</p>
+              <p class="desc">Factors related to your billing period and consumption patterns that affected your bill.</p>
+            </div>
+            <span class="amount">+$11</span>
+          </div>
+
+          <div class="row py16">
+            <span class="icon-arrow-sm"><img src="assets/vector.svg" alt="" /></span>
+            <div class="row-text">
+              <p class="title">Bill Cycle days</p>
+              <p class="desc">One extra day in this billing cycle (30 vs. 29 days). This difference is due to billing period length, not higher energy usage.</p>
+            </div>
+            <span class="amount lg16">+$6</span>
+          </div>
+
+          <div class="row py16">
+            <span class="icon-arrow-sm"><img src="assets/vector.svg" alt="" /></span>
+            <div class="row-text">
+              <p class="title">Low consumption days</p>
+              <p class="desc">Previous months have 2 more low consumption day than this month</p>
+            </div>
+            <span class="amount lg16">+$5</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,21 +1,37 @@
 import type { CapitalActionsSection, CapitalActionCard } from '../../types';
+import { HeatingFlame1Icon, HeatingFlame2Icon, HeatingFlame3Icon, HeatingBaseIcon, PoolPumpIcon, BarIncreaseIcon } from './icons/OptimizerIcons';
 
 interface Props {
   section: CapitalActionsSection;
 }
 
+// Composite flame + base icon at 32px — same glyph as EfficiencyDeepDive's
+// HeatingIcon, scaled up from the 24px source insets by 4/3.
+function HeatingIcon32() {
+  return (
+    <span className="relative w-8 h-8 shrink-0">
+      <HeatingFlame1Icon className="absolute" style={{ top: 3.75, left: 18.61, width: 2.83, height: 5.91 }} />
+      <HeatingFlame2Icon className="absolute" style={{ top: 3.75, left: 14.41, width: 2.83, height: 5.91 }} />
+      <HeatingFlame3Icon className="absolute" style={{ top: 3.75, left: 10.21, width: 2.83, height: 5.91 }} />
+      <HeatingBaseIcon className="absolute" style={{ top: 10.03, left: 2, width: 28, height: 19.97 }} />
+    </span>
+  );
+}
+
 function CapitalIcon({ kind }: { kind: CapitalActionCard['icon'] }) {
   switch (kind) {
-    case 'cooling':
-      // Snowflake — same as TweaksGrid for consistency
+    case 'thermometer':
       return (
-        <svg width="32" height="32" viewBox="0 0 28 28" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
-          <path d="M14 3v22M5.5 8l17 12M5.5 20l17-12" />
-          <path d="M14 7l-2 2m2-2l2 2M14 21l-2-2m2 2l2-2M9 11l-2.5-.7M9 11l-.7-2.5M19 11l2.5-.7M19 11l.7-2.5M9 17l-2.5.7M9 17l-.7 2.5M19 17l2.5.7M19 17l.7 2.5" />
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M18 19.5V7a2 2 0 00-4 0v12.5a4.5 4.5 0 104 0z" />
+          <path d="M16 11h2M16 14h2M16 17h2" />
         </svg>
       );
+    case 'pool-pump':
+      return <PoolPumpIcon className="w-8 h-8" />;
+    case 'heating':
+      return <HeatingIcon32 />;
     case 'solar':
-      // Sun glyph
       return (
         <svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
           <circle cx="16" cy="16" r="6" />
@@ -25,38 +41,46 @@ function CapitalIcon({ kind }: { kind: CapitalActionCard['icon'] }) {
   }
 }
 
-function CapitalCardView({ card }: { card: CapitalActionCard }) {
+function StatTile({ label, value, tone }: { label: string; value: string; tone?: 'default' | 'savings' }) {
+  const isSavings = tone === 'savings';
   return (
-    <div className="flex-1 bg-white border border-[#F7F7F7] rounded-[14px] p-6 flex flex-col gap-6">
-      <div className="w-11 h-11 flex items-center justify-center text-[#262E40]">
+    <div
+      className="flex-1 min-w-0 rounded-[8px] p-6 flex flex-col gap-0.5"
+      style={{ backgroundColor: isSavings ? '#CEF3DA' : '#F5F5F5' }}
+    >
+      <span className="text-[12px] leading-[16px]" style={{ color: isSavings ? '#14843C' : '#66758D' }}>
+        {label}
+      </span>
+      <span className="text-[14px] leading-[20px] font-semibold" style={{ color: isSavings ? '#14843C' : '#000000' }}>
+        {value}
+      </span>
+    </div>
+  );
+}
+
+function CapitalItem({ card }: { card: CapitalActionCard }) {
+  return (
+    <div className="flex gap-4 items-start w-full">
+      <div className="w-8 h-8 flex items-center justify-center text-[#262E40] shrink-0">
         <CapitalIcon kind={card.icon} />
       </div>
-
-      <div className="flex flex-col gap-3">
-        <h3 className="text-[18px] leading-[26px] font-semibold text-black">
-          {card.title}
-        </h3>
-        <p className="text-[14px] leading-[20px] text-black">
-          {card.description}
-        </p>
-      </div>
-
-      {/* Violet payback chip */}
-      <div className="self-start bg-[#A9A9F5] rounded-[6px] px-2 py-1">
-        <span className="text-[12px] leading-[16px] font-semibold text-black">
-          {card.costPayback}
-        </span>
-      </div>
-
-      {/* Savings + optional cross-link */}
-      <div className="flex flex-row items-center gap-6">
-        <span className="text-[18px] leading-[26px] font-semibold text-[#14843C]">
-          {card.savings}
-        </span>
+      <div className="flex-1 min-w-0 flex flex-col gap-4">
+        <div className="flex flex-col gap-1">
+          <h3 className="text-[18px] leading-[26px] font-semibold text-black m-0">{card.title}</h3>
+          <p className="text-[14px] leading-[20px] text-black m-0">{card.description}</p>
+        </div>
+        <div className="flex gap-4 w-full">
+          {card.stats.map((stat, i) => (
+            <StatTile key={i} label={stat.label} value={stat.value} tone={stat.tone} />
+          ))}
+        </div>
+        {card.footnote && (
+          <p className="text-[12px] leading-[16px] italic text-black m-0">{card.footnote}</p>
+        )}
         {card.ctaLabel && (
           <a
             href={card.ctaUrl ?? '#'}
-            className="text-[15px] leading-[20px] font-medium text-black underline decoration-[#262E40]/40 underline-offset-4"
+            className="w-full text-center border border-black rounded-[8px] px-4 py-2 text-[14px] leading-[20px] text-black"
           >
             {card.ctaLabel}
           </a>
@@ -66,20 +90,23 @@ function CapitalCardView({ card }: { card: CapitalActionCard }) {
   );
 }
 
-// CapitalActions — bottom of optimizer report. Per Figma 1497:11614.
-//   - White surface band (24/32 padding)
-//   - Section label "CAPITAL INVESTMENTS"
-//   - 2 cards side-by-side, each with icon + title + body + violet
-//     payback chip + green savings + optional cross-link CTA.
+// CapitalActions — "Capital Investments" section (Home Optimizer V2). White
+// bordered card: icon + big title + description header, then a vertical
+// stack of upgrade items separated by hairlines.
 export function CapitalActions({ section }: Props) {
   return (
-    <div className="bg-white px-8 pb-6 flex flex-col gap-4 w-full">
-      <span className="text-[12px] leading-[16px] font-semibold text-[#262E40] uppercase tracking-[0.02em]">
-        {section.label}
-      </span>
-      <div className="flex flex-row gap-3 w-full items-stretch">
+    <div className="bg-white border border-[#F7F7F7] rounded-[14px] p-8 flex flex-col gap-10 w-full">
+      <div className="flex flex-col gap-2">
+        <BarIncreaseIcon className="w-12 h-12" />
+        <h2 className="text-[24px] leading-[28px] font-bold text-black m-0">{section.label}</h2>
+        <p className="text-[14px] leading-[20px] text-[#262E40] m-0">{section.description}</p>
+      </div>
+
+      <div className="flex flex-col w-full">
         {section.cards.map((card, i) => (
-          <CapitalCardView key={i} card={card} />
+          <div key={i} className={i > 0 ? 'border-t border-[#EFEFEF] mt-10 pt-10' : ''}>
+            <CapitalItem card={card} />
+          </div>
         ))}
       </div>
     </div>

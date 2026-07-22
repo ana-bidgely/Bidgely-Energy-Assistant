@@ -1,7 +1,7 @@
 'use client';
 
 import { create } from 'zustand';
-import type { ChatMessage, FlowName, FlowData, PanelKey } from './types';
+import type { ChatMessage, FlowName, FlowData, PanelKey, EvInputs, SolarInputs } from './types';
 
 // Panels that require a fake 4-second load (mirrors original HTML)
 const PANELS_REQUIRING_LOAD = new Set<PanelKey>([
@@ -10,6 +10,7 @@ const PANELS_REQUIRING_LOAD = new Set<PanelKey>([
   'bill-report',
   'rate-report',
   'optimizer',
+  'high-bill-analyzer',
 ]);
 
 /** Source rect for the modal's morph-from-widget entry animation.
@@ -43,8 +44,23 @@ interface ChatStore {
   flowStep: number;
   flowData: FlowData;
 
+  // Last completed EV flow's answers — kept separate from flowData (which
+  // resetFlow() clears) so the EV report keeps reflecting them after the
+  // flow finishes and the panel opens.
+  evInputs: EvInputs | null;
+
+  // Last completed solar "What if?" refine flow's answers — same reasoning
+  // as evInputs. Null means the solar report still shows auto-detected
+  // ASSUMPTIONS; once set, the report switches to the YOUR INPUTS state.
+  solarInputs: SolarInputs | null;
+
   // Panel-supplied download handler (set by panels that can export PDF)
   panelDownloadHandler: (() => void | Promise<void>) | null;
+
+  // Chat History sidebar (left column, independent of chatMode/activePanel —
+  // can be open while either the welcome screen or an active conversation
+  // is showing).
+  sidebarOpen: boolean;
 
   // Actions
   openModal: (origin?: ModalOrigin | null) => void;
@@ -59,7 +75,10 @@ interface ChatStore {
   setFlow: (flow: FlowName, step?: number, data?: FlowData) => void;
   advanceFlow: (step: number, data?: Partial<FlowData>) => void;
   resetFlow: () => void;
+  setEvInputs: (inputs: EvInputs) => void;
+  setSolarInputs: (inputs: SolarInputs) => void;
   setPanelDownloadHandler: (handler: (() => void | Promise<void>) | null) => void;
+  toggleSidebar: () => void;
 }
 
 export const useChatStore = create<ChatStore>()((set, get) => ({
@@ -74,7 +93,10 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
   flow: null,
   flowStep: 0,
   flowData: {},
+  evInputs: null,
+  solarInputs: null,
   panelDownloadHandler: null,
+  sidebarOpen: false,
 
   openModal: (origin = null) => set({
     modalOpen: true,
@@ -89,6 +111,7 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
     flowStep: 0,
     flowData: {},
     panelDownloadHandler: null,
+    sidebarOpen: false,
   }),
   // Always slide down on close — clearing the origin switches the modal back
   // to the `slide` variant before the closing transition runs.
@@ -117,4 +140,7 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
     set((s) => ({ flowStep: step, flowData: { ...s.flowData, ...data } })),
 
   resetFlow: () => set({ flow: null, flowStep: 0, flowData: {} }),
+  setEvInputs: (inputs) => set({ evInputs: inputs }),
+  setSolarInputs: (inputs) => set({ solarInputs: inputs }),
+  toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
 }));

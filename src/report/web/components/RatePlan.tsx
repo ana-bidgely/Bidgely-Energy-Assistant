@@ -1,5 +1,6 @@
 import type { RatePlanSection, RatePeriod, ExportRatePeriod } from '../../types';
 import { RateUsageChartView } from './RateUsageChart';
+import { LeafIcon, PriceTagIcon } from './icons/OptimizerIcons';
 
 // Rate-period tier colors — flat fills:
 //   $    → Web/Data/off_peak (#28C898) mint
@@ -74,19 +75,21 @@ interface Props {
 // with a Green/600 solid pill for "RECOMMENDED". Standard card uses white with
 // a subtle Web/Background/400 1px stroke (NO shadow). Non-recommended label
 // is rendered as a flat gray pill (Web/Background/400 surface).
-const HEADER_ICON: Record<'price-tag' | 'leaf', string> = {
-  'price-tag': '/optimizer/icon_price_tag.svg',
-  leaf: '/optimizer/icon_leaf.svg',
+const HEADER_ICON: Record<'price-tag' | 'leaf', typeof LeafIcon> = {
+  'price-tag': PriceTagIcon,
+  leaf: LeafIcon,
 };
 
 export function RatePlan({ section }: Props) {
+  const header = section.header;
+  const HeaderIcon = header ? HEADER_ICON[header.icon] : null;
   const body = (
-    <div className={`flex flex-col w-full ${section.header ? 'gap-6' : 'gap-4'}`}>
-      {section.header && (
+    <div className={`flex flex-col w-full ${header ? 'gap-6' : 'gap-4'}`}>
+      {header && HeaderIcon && (
         <div className="flex flex-col gap-2 pr-[120px]">
-          <img src={HEADER_ICON[section.header.icon]} alt="" className="w-12 h-12" />
-          <h2 className="text-[24px] leading-[28px] font-bold text-[#000000] m-0">{section.header.title}</h2>
-          <p className="text-[14px] leading-[20px] text-[#262E40] m-0">{section.header.description}</p>
+          <HeaderIcon className="w-12 h-12" />
+          <h2 className="text-[24px] leading-[28px] font-bold text-[#000000] m-0">{header.title}</h2>
+          <p className="text-[14px] leading-[20px] text-[#262E40] m-0">{header.description}</p>
         </div>
       )}
       {/* Plan cards */}

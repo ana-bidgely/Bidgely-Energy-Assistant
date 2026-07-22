@@ -627,23 +627,34 @@ export interface ApplianceEfficiencySection {
   categories: ApplianceCategoryCard[];
 }
 
-// ─── Capital Actions ──────────────────────────────────────────────────────────
-// 2 side-by-side capital-action cards. Each: icon + title + description +
-// violet payback chip + green "saves $X/yr" + optional cross-link CTA.
+// ─── Capital Actions (Home Optimizer V2) ──────────────────────────────────────
+// A bordered white card: header (icon + big title + description) followed by
+// a vertical stack of upgrade items, each divided by a hairline. Every item
+// has an icon, title/description, a row of 3 stat tiles (Investment/Payback/
+// Savings — the last one green-highlighted), an optional italic footnote,
+// and an optional full-width outlined CTA link.
+
+export interface CapitalActionStat {
+  label: string;           // "Investment" | "Payback" | "Potential savings"
+  value: string;           // "~$150–300" | "2–3 yrs" | "$120/yr"
+  tone?: 'default' | 'savings';
+}
 
 export interface CapitalActionCard {
-  icon: 'cooling' | 'solar';
+  icon: 'thermometer' | 'pool-pump' | 'heating' | 'solar';
   title: string;
   description: string;
-  costPayback: string;     // "~$1,400 net · 12.7-yr payback"
-  savings: string;         // "saves $110/yr"
-  ctaLabel?: string;       // "Get Solar report"
+  stats: CapitalActionStat[];
+  footnote?: string;       // e.g. "¹ Based on ENERGY STAR® estimates..."
+  ctaLabel?: string;       // "Check Utility Rebates" / "Get Solar Report"
   ctaUrl?: string;
 }
 
 export interface CapitalActionsSection {
   type: 'capital-actions';
-  label: string;           // "CAPITAL INVESTMENTS"
+  icon: 'bar-chart';
+  label: string;           // "Capital Investments • Save Up to $2,100/year"
+  description: string;
   cards: CapitalActionCard[];
 }
 
@@ -675,11 +686,11 @@ export interface BillDonutSection {
 // ─── What's Included (Home Optimizer) ──────────────────────────────────────────
 
 export interface IncludedCard {
-  icon: 'leaf' | 'price-tag';
+  icon: 'leaf' | 'price-tag' | 'bar-chart';
   title: string;
   description: string;
-  savingsLabel: string; // "Potential savings"
-  savingsAmount: string; // "$672/year"
+  savingsLabel: string; // "Potential savings" (or "Status" for a non-dollar state)
+  savingsAmount: string; // "$672/year" (or "✓ Already optimized")
 }
 
 export interface WhatsIncludedSection {

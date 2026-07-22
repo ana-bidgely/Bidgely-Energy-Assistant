@@ -8,6 +8,7 @@
 import { useChatStore } from './store';
 import { dispatchInput } from './responses';
 import { getEvMessage } from './flows/ev';
+import { getSolarRefineStep } from './flows/solar';
 
 export function useSendChat() {
   const setChatMode = useChatStore((s) => s.setChatMode);
@@ -35,8 +36,12 @@ export function useSendChat() {
       if (result.startFlow === 'ev') {
         setFlow('ev', 0, {});
         addMessage(getEvMessage());
+      } else if (result.startFlow === 'solar') {
+        setFlow('solar', 0, {});
+        addMessage(getSolarRefineStep(0, {}));
       } else {
         addMessage(result.message);
+        if (result.followUp) addMessage(result.followUp);
         if (result.openPanel) openPanel(result.openPanel.key, result.openPanel.title);
       }
     }, 700);

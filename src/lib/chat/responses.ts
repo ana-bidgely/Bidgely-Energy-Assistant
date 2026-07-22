@@ -63,12 +63,17 @@ export function dispatchInput(input: string): DispatchResult {
   if (raw === '__reset__') {
     return { message: msg(`No problem — what else can I help you with?`, { options: DEFAULT_OPTIONS }) };
   }
+  // Kicks off the solar "What if?" refine flow — offered right after the
+  // auto-detected Solar Savings Report is shown (see intent 5 below).
+  if (raw === '__start_solar_refine__') {
+    return { message: msg(''), startFlow: 'solar' };
+  }
   // Each panel-open response carries BOTH a reportCard chip (so the user can
   // re-open the panel later from the chat thread) AND the openPanel directive
   // (so the panel auto-opens immediately on intent).
   if (raw === '__open_solar_panel__') {
     return {
-      message: msg(`Here's your personalised solar savings analysis — based on your roof size, shading, and current energy usage.`, {
+      message: msg(`Here's your solar savings analysis.`, {
         reportCard: { label: 'View Solar Savings Report', panel: 'solar-dynamic', panelTitle: 'Solar Savings Report' },
       }),
       openPanel: { key: 'solar-dynamic', title: 'Solar Savings Report' },
@@ -84,18 +89,18 @@ export function dispatchInput(input: string): DispatchResult {
   }
   if (raw === '__open_bill_report__') {
     return {
-      message: msg(`Here's your bill analysis — breaking down what changed, why it changed, and exactly what to do about it.`, {
-        reportCard: { label: 'View High Bill Report', panel: 'bill-report', panelTitle: 'High Bill Report — March 2026' },
+      message: msg(`Here's your Home Optimizer Report — showing where your energy is going and every way to bring your bill down.`, {
+        reportCard: { label: 'View Home Optimizer Report', panel: 'bill-report', panelTitle: 'Home Optimizer Report' },
       }),
-      openPanel: { key: 'bill-report', title: 'High Bill Report — March 2026' },
+      openPanel: { key: 'bill-report', title: 'Home Optimizer Report' },
     };
   }
   if (raw === '__open_rate_report__') {
     return {
-      message: msg(`Here's your personalised rate plan comparison — based on your usage profile and current bill.`, {
-        reportCard: { label: 'View Rate Plan Comparison', panel: 'rate-report', panelTitle: 'Rate Plan Comparison' },
+      message: msg(`Here's your Rate Plan Analysis.`, {
+        reportCard: { label: 'View Rate Plan Analysis', panel: 'rate-report', panelTitle: 'Rate Plan Analysis' },
       }),
-      openPanel: { key: 'rate-report', title: 'Rate Plan Comparison' },
+      openPanel: { key: 'rate-report', title: 'Rate Plan Analysis' },
     };
   }
   if (raw === '__open_optimizer__') {
@@ -130,6 +135,45 @@ export function dispatchInput(input: string): DispatchResult {
     };
   }
 
+  // ── "Is my bill high?" — auto-analyze, no follow-up question ────────────
+  // Anchored to sentences starting with "is" so it only catches the chip's
+  // own phrasing ("Is my bill high?", "Is my bill too high?") and doesn't
+  // swallow the "why is my bill higher" intent below, which stays on the
+  // full Home Optimizer Report.
+  if (matchAny(
+    t,
+    /^is\b.*\bbill\b.*\bhigh\b/,
+  )) {
+    const currentPlan = USER.ratePlans.find((p) => p.current);
+    const addressParts = USER.address.split(',').map((s) => s.trim());
+    const cityState = addressParts.slice(-2).join(', ').toUpperCase();
+
+    return {
+      message: msg(`Let's check what's driving your bill this cycle.`, {
+        widget: {
+          type: 'analysis-profile',
+          sections: [
+            {
+              heading: 'Analyzed your home energy profile',
+              rows: [
+                { icon: '🖥️', label: 'Utility', value: USER.utility },
+                { icon: '📍', label: 'Location', value: cityState },
+                { icon: '⚡', label: 'Rate Plan', value: currentPlan?.name ?? '—' },
+                { icon: '📊', label: 'Annual Usage', value: `${(USER.bill.kwh * 12).toLocaleString()} kWh` },
+                { icon: '🚗', label: 'EV', value: `Detected — ${USER.ev.make} ${USER.ev.model}` },
+                { icon: '🏊', label: 'Pool Pump', value: 'Not Detected' },
+              ],
+            },
+          ],
+        },
+      }),
+      followUp: msg(`Your report is ready.`, {
+        reportCard: { label: 'View High Bill Analyzer', panel: 'high-bill-analyzer', panelTitle: 'High Bill Analyzer' },
+      }),
+      openPanel: { key: 'high-bill-analyzer', title: 'High Bill Analyzer' },
+    };
+  }
+
   // ── 1. "Why is my bill higher?" / "Analyse my latest bill" (free-text; bill-chip uses tryDispatchBillSuggestion) ─
   if (matchAny(
     t,
@@ -142,16 +186,16 @@ export function dispatchInput(input: string): DispatchResult {
   )) {
     return {
       message: msg(
-        `Yes — this cycle did come in higher than usual. I've broken it apart into what actually changed and how much each piece contributed.`,
+        `Yes — this cycle did come in higher than usual. I've put together a full breakdown of where your energy is going and the specific ways to bring it down.`,
         {
           reportCard: {
-            label: 'View High Bill Report',
+            label: 'View Home Optimizer Report',
             panel: 'bill-report',
-            panelTitle: 'High Bill Report — March 2026',
+            panelTitle: 'Home Optimizer Report',
           },
         },
       ),
-      openPanel: { key: 'bill-report', title: 'High Bill Report — March 2026' },
+      openPanel: { key: 'bill-report', title: 'Home Optimizer Report' },
     };
   }
 
@@ -180,7 +224,10 @@ export function dispatchInput(input: string): DispatchResult {
     };
   }
 
-  // ── 3. Rate plan intent ──────────────────────────────────────────────────
+  // ── 3. Rate plan intent — auto-analyze, no follow-up question ───────────
+  // Same pattern as the solar intent: the assistant already has everything it
+  // needs (bill, current plan, usage), so it responds immediately with the
+  // profile snapshot and opens the report — no "want me to show it?" gate.
   if (matchAny(
     t,
     /\b(am i on|on the).*\b(best|right|cheapest)\b.*\b(rate|plan)\b/,
@@ -189,20 +236,38 @@ export function dispatchInput(input: string): DispatchResult {
     /\b(rate plan|e-?tou|e-?1|tariff)\b/,
     /\bcompare\b.*\b(rate|plan)\b/,
   )) {
+    const currentPlan = USER.ratePlans.find((p) => p.current);
+    const addressParts = USER.address.split(',').map((s) => s.trim());
+    const cityState = addressParts.slice(-2).join(', ').toUpperCase();
+
     return {
-      message: msg(
-        // Architecture: chat orients only. The "why" (peak hours), the
-        // "which plan" (TOU Saver Plan A), and the "how much" (savings)
-        // all live in the rate-plan report, not in the chat text.
-        `I've compared 6 eligible rate plans against 12 months of your actual usage.\n\n` +
-          `Want me to show the full comparison and which plan fits your pattern best?`,
-        {
-          options: [
-            { label: 'Yes, show rate comparison', value: '__open_rate_report__', isReport: true },
-            { label: 'No thanks', value: '__reset__' },
+      message: msg(`Let's see which rate plan fits your energy usage best.`, {
+        widget: {
+          type: 'analysis-profile',
+          sections: [
+            {
+              heading: 'Analyzed your home energy profile',
+              rows: [
+                { icon: '🖥️', label: 'Utility', value: USER.utility },
+                { icon: '📍', label: 'Location', value: cityState },
+                { icon: '⚡', label: 'Rate Plan', value: currentPlan?.name ?? '—' },
+                { icon: '📊', label: 'Annual Usage', value: `${(USER.bill.kwh * 12).toLocaleString()} kWh` },
+                { icon: '🚗', label: 'EV', value: `Detected — ${USER.ev.make} ${USER.ev.model}` },
+                { icon: '🏊', label: 'Pool Pump', value: 'Not Detected' },
+              ],
+            },
           ],
         },
+      }),
+      followUp: msg(
+        `A better rate plan may be available for your home.\n` +
+          `We've analyzed your energy usage and evaluated available options.\n` +
+          `Your personalized Rate Plan Analysis is ready.`,
+        {
+          reportCard: { label: 'View Rate Plan Analysis', panel: 'rate-report', panelTitle: 'Rate Plan Analysis' },
+        },
       ),
+      openPanel: { key: 'rate-report', title: 'Rate Plan Analysis' },
     };
   }
 
@@ -269,6 +334,12 @@ export function dispatchInput(input: string): DispatchResult {
           reportCard: { label: 'View Solar Savings Report', panel: 'solar-dynamic', panelTitle: 'Solar Savings Report' },
         },
       ),
+      followUp: msg(`Want to swap any of those estimates for your exact roof details?`, {
+        options: [
+          { label: 'Yes, use my exact numbers', value: '__start_solar_refine__' },
+          { label: 'No, these estimates work', value: '__reset__' },
+        ],
+      }),
       openPanel: { key: 'solar-dynamic', title: 'Solar Savings Report' },
     };
   }

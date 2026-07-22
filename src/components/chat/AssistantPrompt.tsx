@@ -20,6 +20,7 @@ const CHIPS: { label: string; icon: string; size: number }[] = [
   { label: 'Lower my energy costs', icon: '/welcome/leaf.svg', size: 16 },
   { label: 'Should I install solar?', icon: '/welcome/solar.svg', size: 18 },
   { label: 'Is an EV right for me?', icon: '/welcome/ev.svg', size: 16 },
+  { label: 'Is my bill high?', icon: '/welcome/bill_high.svg', size: 16 },
 ];
 
 function getGreeting(): string {

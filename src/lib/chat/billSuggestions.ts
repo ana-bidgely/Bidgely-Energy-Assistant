@@ -28,7 +28,7 @@ export const BILL_SUGGESTIONS: BillSuggestion[] = [
     underlyingPrompt: 'Why is my bill higher this month?',
     tools: [
       { name: 'Bill Analysis', kind: 'widget' },
-      { name: 'High Bill Report', kind: 'report' },
+      { name: 'Home Optimizer Report', kind: 'report' },
     ],
   },
   {
@@ -147,16 +147,16 @@ function buildDispatch(suggestion: BillSuggestion): DispatchResult {
     case 'high-bill':
       return {
         message: msg(
-          `Yes — this cycle did come in higher than usual. I've broken it apart into what actually changed and how much each piece contributed.`,
+          `Yes — this cycle did come in higher than usual. I've put together a full breakdown of where your energy is going and the specific ways to bring it down.`,
           {
             reportCard: {
-              label: 'View High Bill Report',
+              label: 'View Home Optimizer Report',
               panel: 'bill-report',
-              panelTitle: 'High Bill Report — March 2026',
+              panelTitle: 'Home Optimizer Report',
             },
           },
         ),
-        openPanel: { key: 'bill-report', title: 'High Bill Report — March 2026' },
+        openPanel: { key: 'bill-report', title: 'Home Optimizer Report' },
       };
 
     case 'project-bill':

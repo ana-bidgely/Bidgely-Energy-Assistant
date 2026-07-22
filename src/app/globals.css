@@ -105,6 +105,23 @@ button { font-family: inherit; }
   white-space: nowrap;
 }
 
+.header-left { display: flex; align-items: center; gap: 12px; }
+
+.sidebar-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 5px;
+  color: var(--text-primary);
+  transition: background 0.15s;
+}
+.sidebar-toggle-btn:hover { background: var(--bg-secondary); }
+.sidebar-toggle-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
+
 .header-actions { display: flex; align-items: center; gap: 16px; }
 
 .header-btn {
@@ -139,8 +156,78 @@ button { font-family: inherit; }
   flex-direction: column;
   overflow: hidden;
   transition: flex 0.35s ease;
-  min-width: 0;
+  /* Hard floor so the chat column never collapses into an unreadable
+     sliver (text wrapping one character per line) when the history
+     sidebar (280px) and report panel (60%) are both open on a narrower
+     window — the report panel shrinks first instead, see #right-panel. */
+  min-width: 320px;
 }
+
+/* ─── Chat History sidebar ──────────────────────────────────────────────────── */
+#history-sidebar {
+  width: 0;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-right: 1px solid var(--border-light);
+  transition: width 0.25s ease;
+}
+#history-sidebar.open { width: 280px; }
+
+.chat-history-list {
+  width: 280px;
+  height: 100%;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.chat-history-header {
+  padding: 16px 8px 4px;
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 12px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  opacity: 0.7;
+}
+.chat-history-header:first-child { padding-top: 4px; }
+
+.chat-history-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 8px;
+  color: var(--text-secondary);
+}
+.chat-history-row svg { flex-shrink: 0; }
+
+.chat-history-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  line-height: 20px;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chat-history-load-more {
+  margin: 12px 8px 4px;
+  padding: 8px;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  background: none;
+  font-size: 13px;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.chat-history-load-more:hover { background: var(--bg-secondary); }
 
 /* ─── Welcome screen ────────────────────────────────────────────────────────── */
 #welcome-screen {
@@ -688,7 +775,9 @@ button { font-family: inherit; }
 #right-panel {
   width: 0;
   overflow: hidden;
-  flex-shrink: 0;
+  /* Shrinks (down to min-width below) before #main-panel is ever forced
+     under its own 320px floor — see #main-panel comment. */
+  flex-shrink: 1;
   /* No border-left — the floating card inside has its own stroke,
      which serves as the visual separator from the chat column. */
   background: #fff;
@@ -697,7 +786,7 @@ button { font-family: inherit; }
   transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-#right-panel.open { width: 60%; }
+#right-panel.open { width: 60%; min-width: 300px; }
 
 .right-panel-inner {
   width: 60vw;

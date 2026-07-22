@@ -3,18 +3,18 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useChatStore } from '@/lib/chat/store';
 import { USER } from '@/lib/data/user';
-import { buildBillExplainerReport } from '@/lib/data/computations';
+import { buildOptimizerReportV2 } from '@/lib/data/computations';
 import { exportPdf } from '@/lib/pdf/export';
 import { ReportWebView } from '@/report/web/ReportWebView';
 
-// BillReportPanel — full pixel-perfect High Bill Explainer rebuilt against
-// Figma 1476:9667. Replaces the old card stack + BillStackedChart with the
-// same ReportWebView pipeline used by solar / EV / rate-plan.
+// BillReportPanel — "Analyse my latest bill" report. Now renders the Home
+// Optimizer V2 report (Figma 5401:4027: already-optimal rate plan + capital
+// investments) instead of the old by-cause High Bill Explainer.
 export default function BillReportPanel() {
   const reportRef = useRef<HTMLDivElement>(null);
   const setPanelDownloadHandler = useChatStore((s) => s.setPanelDownloadHandler);
 
-  const report = useMemo(() => buildBillExplainerReport(USER), []);
+  const report = useMemo(() => buildOptimizerReportV2(USER), []);
 
   useEffect(() => {
     setPanelDownloadHandler(async () => {
