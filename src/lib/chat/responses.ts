@@ -103,14 +103,6 @@ export function dispatchInput(input: string): DispatchResult {
       openPanel: { key: 'rate-report', title: 'Rate Plan Analysis' },
     };
   }
-  if (raw === '__open_optimizer__') {
-    return {
-      message: msg(`Here's your personalised Home Bill Optimiser — showing exactly where your energy is going and how to reduce it.`, {
-        reportCard: { label: 'View Home Bill Optimiser', panel: 'optimizer', panelTitle: 'Home Bill Optimiser' },
-      }),
-      openPanel: { key: 'optimizer', title: 'Home Bill Optimiser' },
-    };
-  }
 
   // ── "What's my bill going to look like next month?" — bill-projection widget ─
   // (Lives ahead of the higher/lower bill intents because it's more specific.)
@@ -135,14 +127,18 @@ export function dispatchInput(input: string): DispatchResult {
     };
   }
 
-  // ── "Is my bill high?" — auto-analyze, no follow-up question ────────────
-  // Anchored to sentences starting with "is" so it only catches the chip's
-  // own phrasing ("Is my bill high?", "Is my bill too high?") and doesn't
-  // swallow the "why is my bill higher" intent below, which stays on the
-  // full Home Optimizer Report.
+  // ── 1. "Analyse my latest bill" / "Is my bill high?" / "Why is my bill
+  // higher?" — auto-analyze, no follow-up question. All three phrasings
+  // route to the same High Bill Analyzer report.
   if (matchAny(
     t,
     /^is\b.*\bbill\b.*\bhigh\b/,
+    /\b(why|reason).*\bbill\b.*\b(high|higher|up|spike|increas|more|expensive)\b/,
+    /\bbill\b.*\b(higher|went up|going up|increased|more expensive)\b/,
+    /\b(high|higher|expensive|spiked)\b.*\bbill\b/,
+    /\bbill\b.*\bhigher\b/,
+    /\banaly[sz]e?\b.*\bbill\b/,
+    /\bbill\b.*\banaly[sz]e?\b/,
   )) {
     const currentPlan = USER.ratePlans.find((p) => p.current);
     const addressParts = USER.address.split(',').map((s) => s.trim());
@@ -174,15 +170,16 @@ export function dispatchInput(input: string): DispatchResult {
     };
   }
 
-  // ── 1. "Why is my bill higher?" / "Analyse my latest bill" (free-text; bill-chip uses tryDispatchBillSuggestion) ─
+  // ── 2. "Lower my energy costs" / generic savings intent — auto-analyze,
+  // no follow-up question. Routes to the Home Optimizer Report (formerly
+  // "Analyse my latest bill"'s target, moved here since that chip now goes
+  // straight to the High Bill Analyzer above).
   if (matchAny(
     t,
-    /\b(why|reason).*\bbill\b.*\b(high|higher|up|spike|increas|more|expensive)\b/,
-    /\bbill\b.*\b(higher|went up|going up|increased|more expensive)\b/,
-    /\b(high|higher|expensive|spiked)\b.*\bbill\b/,
-    /\bbill\b.*\bhigher\b/,
-    /\banaly[sz]e?\b.*\bbill\b/,
-    /\bbill\b.*\banaly[sz]e?\b/,
+    /\b(lower|reduc|cut|decreas)\b.*\b(bill|cost|costs|energy|spend|spending)\b/,
+    /\b(how can i|how do i|ways to)\b.*\b(save|sav|lower|reduc|cut)\b/,
+    /\bsave money\b/,
+    /\b(tip|tips|optimi|efficient|cheaper)\b/,
   )) {
     return {
       message: msg(
@@ -196,31 +193,6 @@ export function dispatchInput(input: string): DispatchResult {
         },
       ),
       openPanel: { key: 'bill-report', title: 'Home Optimizer Report' },
-    };
-  }
-
-  // ── 2. "How can I lower my bill?" / generic savings intent ───────────────
-  if (matchAny(
-    t,
-    /\b(lower|reduc|cut|decreas)\b.*\b(bill|cost|costs|energy|spend|spending)\b/,
-    /\b(how can i|how do i|ways to)\b.*\b(save|sav|lower|reduc|cut)\b/,
-    /\bsave money\b/,
-    /\b(tip|tips|optimi|efficient|cheaper)\b/,
-  )) {
-    return {
-      message: msg(
-        // Architecture: chat orients only. The "where" (HVAC vs water vs
-        // baseload), the "what to do" (specific actions), and every $/yr
-        // figure live in the Home Bill Optimiser report.
-        `There's a clear gap between what you spend and what efficient peers spend — and a stack of small actions that close most of it.\n\n` +
-          `Want me to walk through every action and how much each one is worth?`,
-        {
-          options: [
-            { label: 'Yes, show me', value: '__open_optimizer__', isReport: true },
-            { label: 'No thanks', value: '__reset__' },
-          ],
-        },
-      ),
     };
   }
 

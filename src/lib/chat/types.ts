@@ -3,7 +3,6 @@ export type PanelKey =
   | 'ev'
   | 'bill-report'
   | 'rate-report'
-  | 'optimizer'
   | 'bill'
   | 'bill-tool'
   | 'monthly-summary'

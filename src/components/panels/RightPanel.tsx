@@ -7,7 +7,6 @@ import BillPanel from './BillPanel';
 import BillReportPanel from './BillReportPanel';
 import RatePanel from './RatePanel';
 import RatePlanPanel from './RatePlanPanel';
-import OptimizerPanel from './OptimizerPanel';
 import BillToolPlaceholderPanel from './BillToolPlaceholderPanel';
 import HighBillAnalyzerPanel from './HighBillAnalyzerPanel';
 import MonthlySummaryWidget from '@/components/widgets/miraki/MonthlySummaryWidget';
@@ -24,7 +23,6 @@ export default function RightPanel() {
       case 'bill-report':   return <BillReportPanel />;
       case 'rate':          return <RatePanel />;
       case 'rate-report':   return <RatePlanPanel />;
-      case 'optimizer':     return <OptimizerPanel />;
       case 'usage':             return <BillPanel showUsage />;
       case 'monthly-summary':   return <MonthlySummaryWidget />;
       case 'energy-details':    return <EnergyDetailsWidget />;
@@ -37,12 +35,11 @@ export default function RightPanel() {
   // Any panel rendered through ReportWebView (or that wants the FBFBFC
   // canvas treatment) — strip the body's default 24px padding + white
   // background so the report fills edge-to-edge against the panel wash.
-  // Previously only solar got this; now EV, bill-report, optimizer, and
-  // rate-report all share the same canvas treatment.
+  // Previously only solar got this; now EV, bill-report, and rate-report
+  // all share the same canvas treatment.
   const isReportMode = activePanel === 'solar-dynamic'
     || activePanel === 'ev'
     || activePanel === 'bill-report'
-    || activePanel === 'optimizer'
     || activePanel === 'rate-report'
     || activePanel === 'high-bill-analyzer';
 

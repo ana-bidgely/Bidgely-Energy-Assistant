@@ -9,7 +9,6 @@ const PANELS_REQUIRING_LOAD = new Set<PanelKey>([
   'ev',
   'bill-report',
   'rate-report',
-  'optimizer',
   'high-bill-analyzer',
 ]);
 
