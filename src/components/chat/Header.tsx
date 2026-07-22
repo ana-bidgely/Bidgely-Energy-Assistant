@@ -38,13 +38,6 @@ export default function Header() {
       </div>
 
       <div className="header-actions">
-        <button className="header-btn" title="Chat History" onClick={toggleSidebar}>
-          <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M10 3a7 7 0 1 0 0 14A7 7 0 0 0 10 3zM1.5 10a8.5 8.5 0 1 1 17 0 8.5 8.5 0 0 1-17 0z" fill="currentColor" />
-            <path d="M10 5.75a.75.75 0 0 1 .75.75v3.69l2.28 2.28a.75.75 0 1 1-1.06 1.06l-2.5-2.5A.75.75 0 0 1 9.25 10.5V6.5a.75.75 0 0 1 .75-.75z" fill="currentColor" />
-          </svg>
-          Chat History
-        </button>
         <button className="header-btn" title="New Chat" onClick={resetToWelcome}>
           <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M2 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6l-3.5 3V4z" stroke="currentColor" strokeWidth="1.4" fill="none" strokeLinejoin="round" />
