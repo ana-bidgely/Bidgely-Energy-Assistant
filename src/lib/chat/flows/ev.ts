@@ -122,10 +122,6 @@ export function getEvStep(step: number, data: FlowData): ChatMessage {
           panel: 'ev',
           panelTitle: 'EV Savings Analysis',
         },
-        options: [
-          { label: 'Yes, show full report', value: '__open_ev_panel__', isReport: true },
-          { label: 'No thanks', value: '__reset__' },
-        ],
         timestamp: Date.now(),
       };
     }
