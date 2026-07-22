@@ -117,10 +117,6 @@ export function getSolarRefineStep(step: number, data: FlowData): ChatMessage {
           panel: 'solar-dynamic',
           panelTitle: 'Solar Savings Report',
         },
-        options: [
-          { label: 'Yes, show updated report', value: '__open_solar_panel__', isReport: true },
-          { label: 'No thanks', value: '__reset__' },
-        ],
         timestamp: Date.now(),
       };
     }
