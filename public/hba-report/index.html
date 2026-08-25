@@ -282,151 +282,164 @@
     margin: 0;
   }
 
-  /* ---------- Why breakdown card ---------- */
-  .breakdown-wrap { padding: 12px 32px 24px; }
-  .breakdown-card {
-    background: #FFFFFF;
-    border-radius: 14px;
-    box-shadow: var(--report-shadow);
-    padding: 24px;
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-  }
-  .breakdown-head { display: flex; flex-direction: column; gap: 4px; }
-  .breakdown-head h2 {
+  /* ---------- Why breakdown ---------- */
+  .breakdown-head-wrap { padding: 24px 32px 16px; }
+  .breakdown-head-wrap h2 {
     font-weight: 600;
     font-size: 20px;
     line-height: 24px;
     color: #000000;
     margin: 0;
   }
-  .breakdown-head p {
-    font-weight: 400;
-    font-size: 14px;
-    line-height: 20px;
-    color: var(--text-secondary);
-    margin: 0;
+
+  /* ---------- Sankey summary (total increase + category bars) ---------- */
+  .sankey-wrap { padding: 0 32px 16px; }
+  .sankey-card {
+    background: #FFFFFF;
+    border: 1px solid #E7E7E7;
+    border-radius: 14px;
+    overflow: hidden;
   }
-
-  .drivers { display: flex; flex-direction: column; gap: 20px; }
-
-  .driver-block {
-    border-radius: 12px;
-    padding: 16px;
+  .sankey-inner { display: flex; gap: 16px; align-items: center; padding: 16px; }
+  .sankey-tile {
+    width: 180px;
+    height: 104px;
+    flex-shrink: 0;
+    background: #FAFAFA;
+    border-radius: 8px;
     display: flex;
     flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
   }
-  .driver-block.non-weather { background: var(--factor-bill-goesup); gap: 16px; }
-  .driver-block.plain { background: #FBFBFC; border-top: 1px solid var(--surface-subtle); }
-  .driver-block.plain.gapped { gap: 16px; }
+  .sankey-tile .label { font-weight: 600; font-size: 11px; color: var(--muted-gray-text); margin: 0; }
+  .sankey-tile .value { font-weight: 700; font-size: 28px; color: var(--ink-900); margin: 0; }
+  .sankey-bars { flex: 1 0 0; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+  .sankey-row { display: flex; height: 24px; border-radius: 4px; overflow: hidden; background: #FAFAFA; }
+  .sankey-row.sm { height: 20px; }
+  .sankey-row .fill { display: flex; align-items: center; padding-left: 8px; white-space: nowrap; }
+  .sankey-row .fill.non-weather { background: #FEE2E2; color: var(--dominant-fg); font-weight: 700; font-size: 10px; }
+  .sankey-row .fill.weather { background: #DBEAFE; color: #1D4ED8; font-weight: 600; font-size: 10px; }
+  .sankey-row .fill.rate,
+  .sankey-row .fill.days { background: #E8EBF0; color: #6B7280; font-weight: 600; font-size: 10px; }
 
-  .driver-head-row {
-    display: flex;
-    gap: 16px;
-    align-items: flex-start;
-    width: 100%;
-  }
-  .driver-head-row .content { flex: 1 0 0; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
-  .driver-head-row .title-line { display: flex; gap: 8px; align-items: center; }
-  .driver-head-row .title-line .title,
-  .driver-head-row .title {
-    font-weight: 600;
-    font-size: 16px;
-    line-height: 24px;
-    color: var(--ink-900);
-    white-space: nowrap;
-  }
-  .badge-dominant {
+  /* ---------- Cause accordion ---------- */
+  .causes-wrap { padding: 0 32px 32px; }
+  .causes-card {
     background: #FFFFFF;
-    color: var(--dominant-fg);
-    font-weight: 600;
-    font-size: 12px;
-    line-height: 16px;
-    padding: 4px 12px;
-    border-radius: 32px;
+    border: 1px solid #E7E7E7;
+    border-radius: 14px;
+    overflow: hidden;
   }
-  .driver-head-row .desc {
+  .cause-item + .cause-item { border-top: 1px solid #E7E7E7; }
+
+  .cause-head {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    width: 100%;
+    padding: 16px 20px;
+    background: #FFFFFF;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
+  }
+  .cause-item.open .cause-head { background: #FAFAFA; }
+
+  .cause-bar { width: 4px; height: 24px; border-radius: 2px; flex-shrink: 0; transition: height 0.15s ease; }
+  .cause-item.open .cause-bar { height: 44px; }
+  .cause-bar.tone-nonweather { background: #EF4444; }
+  .cause-bar.tone-weather { background: #3B82F6; }
+  .cause-bar.tone-neutral { background: #CBD5E1; }
+
+  .cause-main { flex: 1 0 0; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+  .cause-title-row { display: flex; gap: 8px; align-items: center; }
+  .cause-title-row .title { font-weight: 700; font-size: 15px; color: var(--ink-900); white-space: nowrap; margin: 0; }
+  .badge-dominant {
+    background: #FEE2E2;
+    color: var(--dominant-fg);
+    font-weight: 700;
+    font-size: 10px;
+    line-height: normal;
+    padding: 3px 10px;
+    border-radius: 20px;
+  }
+  .cause-desc {
     font-weight: 400;
-    font-size: 14px;
-    line-height: 20px;
+    font-size: 13px;
     color: var(--text-secondary);
     margin: 0;
+    display: none;
   }
-  .driver-head-row .amount {
-    font-weight: 600;
-    font-size: 16px;
-    line-height: 24px;
-    color: var(--ink-900);
-    width: 64px;
-    text-align: right;
-    flex-shrink: 0;
-  }
+  .cause-item.open .cause-desc { display: block; }
 
-  .row {
+  .cause-side { display: flex; gap: 12px; align-items: center; flex-shrink: 0; }
+  .cause-amount { font-weight: 700; font-size: 16px; color: var(--ink-900); white-space: nowrap; margin: 0; }
+  .cause-amount.dominant { color: var(--dominant-fg); }
+  .chevron { width: 16px; height: 16px; flex-shrink: 0; }
+  .chevron .down { display: none; }
+  .chevron .right { display: block; }
+  .cause-item.open .chevron .down { display: block; }
+  .cause-item.open .chevron .right { display: none; }
+
+  .cause-body { display: none; flex-direction: column; }
+  .cause-item.open .cause-body { display: flex; }
+
+  .sub-row {
     display: flex;
-    gap: 16px;
-    align-items: flex-start;
-    border-top: 1px dashed var(--background-500);
+    gap: 12px;
+    align-items: center;
+    padding: 12px 20px 12px 44px;
+    border-top: 1px solid #F3F4F6;
     width: 100%;
   }
-  .row.py16 { padding: 16px 0; }
-  .row.py11 { padding: 11px 0; }
-  .row.indent { padding-left: 40px; }
-
-  .icon-arrow-sm {
-    width: 16px;
-    height: 17.5px;
-    transform: rotate(90deg);
+  .sub-icon { width: 20px; height: 20px; flex-shrink: 0; position: relative; }
+  .sub-icon img { width: 20px; height: 20px; display: block; }
+  .sub-icon.sz16 { width: 16px; height: 16px; }
+  .sub-icon.sz16 img { width: 16px; height: 16px; }
+  .sub-arrow {
+    width: 24px;
+    height: 24px;
     flex-shrink: 0;
+    transform: rotate(90deg);
     display: flex;
     align-items: center;
     justify-content: center;
   }
-  .icon-arrow-sm img { width: 16px; height: 17.5px; }
-  .icon-arrow-lg {
-    width: 24px;
-    height: 24px;
-    transform: rotate(90deg);
-    flex-shrink: 0;
-  }
-  .icon-arrow-lg img { width: 24px; height: 24px; }
-  .icon-cat { width: 24px; height: 24px; flex-shrink: 0; position: relative; }
-  .icon-cat img { width: 24px; height: 24px; display: block; }
+  .sub-arrow img { width: 24px; height: 24px; }
 
-  /* composite heating icon */
-  .icon-heating { width: 24px; height: 24px; flex-shrink: 0; position: relative; }
+  /* composite heating icon (20px) */
+  .icon-heating { width: 20px; height: 20px; flex-shrink: 0; position: relative; }
   .icon-heating .inner { position: absolute; inset: 6.25%; }
   .icon-heating .flame { position: absolute; }
   .icon-heating .flame img { width: 100%; height: 100%; display: block; }
   .icon-heating .base { position: absolute; inset: 31.35% 6.25% 6.25% 6.25%; }
   .icon-heating .base img { width: 100%; height: 100%; display: block; }
 
-  .row-text { flex: 1 0 0; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-  .row-text .title {
-    font-weight: 400;
-    font-size: 14px;
-    line-height: 20px;
+  .sub-text { flex: 1 0 0; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .sub-text .title {
+    font-weight: 600;
+    font-size: 13px;
     color: var(--ink-900);
     white-space: nowrap;
     margin: 0;
   }
-  .row-text .desc {
+  .sub-text .desc {
     font-weight: 400;
-    font-size: 14px;
-    line-height: 20px;
-    color: var(--foreground-400);
+    font-size: 11px;
+    color: var(--text-secondary);
     margin: 0;
   }
-  .row-text .desc.secondary { color: var(--text-secondary); }
-  .row-text .flag-row {
+  .sub-text .flag-row {
     display: flex;
     gap: 8px;
     align-items: center;
     padding: 4px 0;
   }
-  .row-text .flag-row img { width: 20px; height: 20px; }
-  .row-text .flag-row span {
+  .sub-text .flag-row img { width: 20px; height: 20px; }
+  .sub-text .flag-row span {
     font-weight: 400;
     font-size: 14px;
     line-height: 20px;
@@ -434,15 +447,15 @@
     text-decoration: underline;
   }
 
-  .row .amount {
+  .sub-amount {
     width: 64px;
     text-align: right;
     flex-shrink: 0;
     font-weight: 400;
+    font-size: 13px;
+    color: var(--ink-900);
   }
-  .row .amount.lg16 { font-size: 16px; line-height: 24px; color: var(--ink-900); }
-  .row .amount.sm14gray { font-size: 14px; line-height: 20px; color: var(--foreground-400); }
-  .row .amount.sm14sec { font-size: 14px; line-height: 20px; color: var(--text-secondary); }
+  .sub-amount.strong { font-weight: 600; width: auto; }
 </style>
 </head>
 <body>
@@ -550,36 +563,54 @@
     </div>
   </div>
 
-  <!-- Prepared for note (mid-page, per design) -->
-  <div class="prepared-note">
-    <p>Prepared for Sarah Mitchell · April 14, 2026 · Energy.Co</p>
+  <!-- Why breakdown -->
+  <div class="breakdown-head-wrap">
+    <h2>Why your bill is higher</h2>
   </div>
 
-  <!-- Why breakdown -->
-  <div class="breakdown-wrap">
-    <div class="breakdown-card">
-      <div class="breakdown-head">
-        <h2>Why $87 Up over previous bill cycle</h2>
-        <p>The breakdown below focuses on the comparison to previous bill cycle because it represents the larger change in your bill.</p>
+  <!-- Sankey summary -->
+  <div class="sankey-wrap">
+    <div class="sankey-card">
+      <div class="sankey-inner">
+        <div class="sankey-tile">
+          <p class="label">TOTAL INCREASE</p>
+          <p class="value">+$87</p>
+        </div>
+        <div class="sankey-bars">
+          <div class="sankey-row"><span class="fill non-weather" style="width:47.1%;">NON-WEATHER</span></div>
+          <div class="sankey-row sm"><span class="fill weather" style="width:12.6%;">WEATHER</span></div>
+          <div class="sankey-row sm"><span class="fill rate" style="width:27.6%;">RATE CHANGES</span></div>
+          <div class="sankey-row sm"><span class="fill days" style="width:12.6%;">EXTRA DAYS</span></div>
+        </div>
       </div>
+    </div>
+  </div>
 
-      <div class="drivers">
+  <!-- Cause accordion -->
+  <div class="causes-wrap">
+    <div class="causes-card">
 
-        <!-- Non-Weather Consumption -->
-        <div class="driver-block non-weather">
-          <div class="driver-head-row">
-            <div class="content">
-              <div class="title-line">
-                <span class="title">Non-Weather Consumption</span>
-                <span class="badge-dominant">DOMINANT CAUSE</span>
-              </div>
-              <p class="desc">Always-on devices used 72 kWh more this cycle. Common sources include refrigerators, networking equipment, and standby electronics. Some of this usage may be reduced through small behavior changes.</p>
-            </div>
-            <span class="amount">+$41</span>
-          </div>
-
-          <div class="row py16">
-            <span class="icon-arrow-sm"><img src="assets/vector.svg" alt="" /></span>
+      <!-- Non-Weather Consumption -->
+      <div class="cause-item">
+        <button type="button" class="cause-head">
+          <span class="cause-bar tone-nonweather"></span>
+          <span class="cause-main">
+            <span class="cause-title-row">
+              <span class="title">Non-Weather Consumption</span>
+              <span class="badge-dominant">DOMINANT CAUSE</span>
+            </span>
+            <p class="cause-desc">Always-on and non-weather appliances used 72 kWh more this cycle.</p>
+          </span>
+          <span class="cause-side">
+            <span class="cause-amount dominant">+$41</span>
+            <span class="chevron">
+              <img class="right" src="assets/chevron_right.svg" alt="" />
+              <img class="down" src="assets/chevron_down.svg" alt="" />
+            </span>
+          </span>
+        </button>
+        <div class="cause-body">
+          <div class="sub-row">
             <span class="icon-heating">
               <span class="inner">
                 <span class="flame" style="top:6.25%; right:30.55%; bottom:72.64%; left:59.34%;"><img src="assets/vector1.svg" alt="" /></span>
@@ -588,173 +619,186 @@
               </span>
               <span class="base"><img src="assets/group1.svg" alt="" /></span>
             </span>
-            <div class="row-text">
-              <p class="title">Heating</p>
-              <p class="desc">Heating used more energy than expected this cycle.</p>
-            </div>
-            <span class="amount lg16">+$17</span>
+            <div class="sub-text"><p class="title">Heating</p></div>
+            <span class="sub-amount strong">+$17</span>
           </div>
-
-          <div class="row py11 indent">
-            <span class="icon-arrow-lg"><img src="assets/arrow_up_right.svg" alt="" /></span>
-            <div class="row-text">
+          <div class="sub-row">
+            <span class="sub-arrow"><img src="assets/arrow_up_right.svg" alt="" /></span>
+            <div class="sub-text">
               <p class="title">Heating Runtime</p>
               <p class="desc">Your heating system ran longer than expected this cycle.</p>
             </div>
-            <span class="amount sm14gray">+$10</span>
+            <span class="sub-amount">+$10</span>
           </div>
-
-          <div class="row py11 indent">
-            <span class="icon-arrow-lg"><img src="assets/arrow_up_right.svg" alt="" /></span>
-            <div class="row-text">
+          <div class="sub-row">
+            <span class="sub-arrow"><img src="assets/arrow_up_right.svg" alt="" /></span>
+            <div class="sub-text">
               <p class="title">Heating Inefficiency</p>
               <p class="desc">Reduced heater efficiency increased energy required to maintain comfort.</p>
             </div>
-            <span class="amount sm14gray">+$7</span>
+            <span class="sub-amount">+$7</span>
           </div>
-
-          <div class="row py16">
-            <span class="icon-arrow-sm"><img src="assets/vector.svg" alt="" /></span>
-            <span class="icon-cat"><img src="assets/always_on.svg" alt="" /></span>
-            <div class="row-text">
-              <p class="title">Always-On</p>
-              <p class="desc">Devices that run continuously used more energy than expected, including networking equipment, standby electronics, and other always-on devices.</p>
+          <div class="sub-row">
+            <span class="sub-icon"><img src="assets/always_on.svg" alt="" /></span>
+            <div class="sub-text">
+              <p class="title">Always-On Devices</p>
+              <p class="desc">Networking equipment and standby electronics drew more power.</p>
             </div>
-            <span class="amount lg16">+$7</span>
+            <span class="sub-amount strong">+$7</span>
           </div>
-
-          <div class="row py16">
-            <span class="icon-arrow-sm"><img src="assets/vector.svg" alt="" /></span>
-            <span class="icon-cat"><img src="assets/electric_vehicle.svg" alt="" /></span>
-            <div class="row-text">
-              <p class="title">EV</p>
-              <p class="desc">Additional EV charging increased electricity consumption this cycle.</p>
+          <div class="sub-row">
+            <span class="sub-icon"><img src="assets/electric_vehicle.svg" alt="" /></span>
+            <div class="sub-text">
+              <p class="title">EV Charging</p>
               <div class="flag-row"><img src="assets/flag.svg" alt="" /><span>Confirm you have an EV</span></div>
             </div>
-            <span class="amount lg16">+$5</span>
+            <span class="sub-amount strong">+$5</span>
           </div>
-
-          <div class="row py16">
-            <span class="icon-arrow-sm"><img src="assets/vector.svg" alt="" /></span>
-            <span class="icon-cat"><img src="assets/other_electric.svg" alt="" /></span>
-            <div class="row-text">
-              <p class="title">Other</p>
-              <p class="desc">Smaller increases across several appliances added to your bill.</p>
+          <div class="sub-row">
+            <span class="sub-icon"><img src="assets/other_electric.svg" alt="" /></span>
+            <div class="sub-text">
+              <p class="title">Other Appliances</p>
+              <p class="desc">Smaller increases across several devices.</p>
             </div>
-            <span class="amount lg16">+$12</span>
+            <span class="sub-amount strong">+$12</span>
           </div>
         </div>
+      </div>
 
-        <!-- Weather-Driven Consumption -->
-        <div class="driver-block plain">
-          <div class="driver-head-row">
-            <div class="content">
-              <div class="title-line"><span class="title">Weather-Driven Consumption</span></div>
-              <p class="desc">Average outdoor temperatures were 6°F higher this cycle. Our analysis estimates weather-driven cooling demand contributed approximately 32 kWh of additional AC consumption.</p>
+      <!-- Weather Impact -->
+      <div class="cause-item">
+        <button type="button" class="cause-head">
+          <span class="cause-bar tone-weather"></span>
+          <span class="cause-main">
+            <span class="cause-title-row"><span class="title">Weather Impact</span></span>
+            <p class="cause-desc">Avg temps were 6°F lower this cycle, driving ~32 kWh extra Heating.</p>
+          </span>
+          <span class="cause-side">
+            <span class="cause-amount">+$11</span>
+            <span class="chevron">
+              <img class="right" src="assets/chevron_right.svg" alt="" />
+              <img class="down" src="assets/chevron_down.svg" alt="" />
+            </span>
+          </span>
+        </button>
+        <div class="cause-body">
+          <div class="sub-row">
+            <span class="sub-icon sz16"><img src="assets/thermometer.svg" alt="" /></span>
+            <div class="sub-text">
+              <p class="title">Heating demand</p>
+              <p class="desc">6°F lower than previous cycle increased heating demand.</p>
             </div>
-            <span class="amount">+$11</span>
-          </div>
-
-          <div class="row py11">
-            <span class="icon-arrow-lg"><img src="assets/arrow_up_right.svg" alt="" /></span>
-            <div class="row-text">
-              <p class="title">Heating</p>
-              <p class="desc secondary">Average outdoor temperatures were 6°F lower than the previous billing cycle, increasing heating demand.</p>
-            </div>
-            <span class="amount sm14sec">+$11</span>
+            <span class="sub-amount strong">+$11</span>
           </div>
         </div>
+      </div>
 
-        <!-- Rate-Driven -->
-        <div class="driver-block plain">
-          <div class="row py16" style="border-top:none;">
-            <div class="row-text" style="gap:8px;">
-              <p class="title" style="font-weight:600; font-size:16px; line-height:24px;">Rate-Driven</p>
-              <p class="desc">Your rate plan changed this cycle, and your average rate went from 18¢ to 21¢ per kWh. We estimate this change increased your bill by about $20.</p>
-            </div>
-            <span class="amount lg16" style="align-self:flex-start;">+$24</span>
+      <!-- Rate Changes -->
+      <div class="cause-item">
+        <button type="button" class="cause-head">
+          <span class="cause-bar tone-neutral"></span>
+          <span class="cause-main">
+            <span class="cause-title-row"><span class="title">Rate Changes</span></span>
+            <p class="cause-desc">Avg rate rose from 18¢ to 21¢/kWh - more peak-hour usage.</p>
+          </span>
+          <span class="cause-side">
+            <span class="cause-amount">+$24</span>
+            <span class="chevron">
+              <img class="right" src="assets/chevron_right.svg" alt="" />
+              <img class="down" src="assets/chevron_down.svg" alt="" />
+            </span>
+          </span>
+        </button>
+        <div class="cause-body">
+          <div class="sub-row">
+            <div class="sub-text"><p class="title">Peak Consumption</p></div>
+            <span class="sub-amount strong">+$24</span>
           </div>
-
-          <div class="row py16">
-            <span class="icon-arrow-sm"><img src="assets/vector.svg" alt="" /></span>
-            <div class="row-text">
-              <p class="title">Peak Consumption Increase</p>
-              <p class="desc">More electricity was used during peak-priced hours than expected, increasing your bill.</p>
-            </div>
-            <span class="amount lg16">+$24</span>
-          </div>
-
-          <div class="row py11 indent">
-            <span class="icon-arrow-lg"><img src="assets/arrow_up_right.svg" alt="" /></span>
-            <div class="row-text">
+          <div class="sub-row">
+            <span class="sub-arrow"><img src="assets/arrow_up_right.svg" alt="" /></span>
+            <div class="sub-text">
               <p class="title">Heating</p>
               <p class="desc">A larger share of heating usage occurred during peak-priced hours.</p>
             </div>
-            <span class="amount sm14gray">+$11</span>
+            <span class="sub-amount">+$11</span>
           </div>
-
-          <div class="row py11 indent">
-            <span class="icon-arrow-lg"><img src="assets/arrow_up_right.svg" alt="" /></span>
-            <div class="row-text">
+          <div class="sub-row">
+            <span class="sub-arrow"><img src="assets/arrow_up_right.svg" alt="" /></span>
+            <div class="sub-text">
               <p class="title">EV</p>
               <p class="desc">More charging occurred during higher-priced evening hours.</p>
             </div>
-            <span class="amount sm14gray">+$7</span>
+            <span class="sub-amount">+$7</span>
           </div>
-
-          <div class="row py11 indent">
-            <span class="icon-arrow-lg"><img src="assets/arrow_up_right.svg" alt="" /></span>
-            <div class="row-text">
+          <div class="sub-row">
+            <span class="sub-arrow"><img src="assets/arrow_up_right.svg" alt="" /></span>
+            <div class="sub-text">
               <p class="title">Pool-Pump</p>
               <p class="desc">Pump operation shifted toward peak-priced periods.</p>
               <div class="flag-row"><img src="assets/flag.svg" alt="" /><span>Confirm you have a Pool Pump</span></div>
             </div>
-            <span class="amount sm14gray">+$4</span>
+            <span class="sub-amount">+$4</span>
           </div>
-
-          <div class="row py11 indent">
-            <span class="icon-arrow-lg"><img src="assets/arrow_up_right.svg" alt="" /></span>
-            <div class="row-text">
+          <div class="sub-row">
+            <span class="sub-arrow"><img src="assets/arrow_up_right.svg" alt="" /></span>
+            <div class="sub-text">
               <p class="title">Other</p>
               <p class="desc">Smaller increases across several appliances added to peak-hour consumption.</p>
             </div>
-            <span class="amount sm14gray">+$2</span>
+            <span class="sub-amount">+$2</span>
           </div>
         </div>
-
-        <!-- Consumption days -->
-        <div class="driver-block plain gapped">
-          <div class="driver-head-row" style="border-top:none;">
-            <div class="content" style="gap:8px;">
-              <p class="title" style="font-weight:600; font-size:16px; line-height:24px;">Consumption days</p>
-              <p class="desc">Factors related to your billing period and consumption patterns that affected your bill.</p>
-            </div>
-            <span class="amount">+$11</span>
-          </div>
-
-          <div class="row py16">
-            <span class="icon-arrow-sm"><img src="assets/vector.svg" alt="" /></span>
-            <div class="row-text">
-              <p class="title">Bill Cycle days</p>
-              <p class="desc">One extra day in this billing cycle (30 vs. 29 days). This difference is due to billing period length, not higher energy usage.</p>
-            </div>
-            <span class="amount lg16">+$6</span>
-          </div>
-
-          <div class="row py16">
-            <span class="icon-arrow-sm"><img src="assets/vector.svg" alt="" /></span>
-            <div class="row-text">
-              <p class="title">Low consumption days</p>
-              <p class="desc">Previous months have 2 more low consumption day than this month</p>
-            </div>
-            <span class="amount lg16">+$5</span>
-          </div>
-        </div>
-
       </div>
+
+      <!-- Extra Consumption Days -->
+      <div class="cause-item">
+        <button type="button" class="cause-head">
+          <span class="cause-bar tone-neutral"></span>
+          <span class="cause-main">
+            <span class="cause-title-row"><span class="title">Extra Consumption Days</span></span>
+            <p class="cause-desc">30-day vs. 29-day billing period - not higher usage.</p>
+          </span>
+          <span class="cause-side">
+            <span class="cause-amount">+$11</span>
+            <span class="chevron">
+              <img class="right" src="assets/chevron_right.svg" alt="" />
+              <img class="down" src="assets/chevron_down.svg" alt="" />
+            </span>
+          </span>
+        </button>
+        <div class="cause-body">
+          <div class="sub-row">
+            <div class="sub-text">
+              <p class="title">Bill Cycle Days</p>
+              <p class="desc">One extra day in this billing period.</p>
+            </div>
+            <span class="sub-amount strong">+$6</span>
+          </div>
+          <div class="sub-row">
+            <div class="sub-text">
+              <p class="title">Low Consumption Days</p>
+              <p class="desc">Previous month had 2 more low-usage days.</p>
+            </div>
+            <span class="sub-amount strong">+$5</span>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 
+  <!-- Prepared for note (footer, per design) -->
+  <div class="prepared-note">
+    <p>Prepared for Sarah Mitchell · April 14, 2026 · Energy.Co</p>
+  </div>
+
 </div>
+<script>
+  document.querySelectorAll('.cause-head').forEach(function (head) {
+    head.addEventListener('click', function () {
+      head.closest('.cause-item').classList.toggle('open');
+    });
+  });
+</script>
 </body>
 </html>

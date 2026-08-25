@@ -52,6 +52,15 @@ export default function HighBillAnalyzerPanel() {
     doc.head.appendChild(style);
 
     setContentHeight(doc.documentElement.scrollHeight);
+
+    // The report's "By Cause" section is an accordion — opening/closing a
+    // cause changes the document's height after load, so a one-time measure
+    // isn't enough (the wrapper below clips to a stale height). Keep
+    // measuring as the iframe's own content resizes.
+    const resizeObserver = new ResizeObserver(() => {
+      setContentHeight(doc.documentElement.scrollHeight);
+    });
+    resizeObserver.observe(doc.documentElement);
   }
 
   return (
