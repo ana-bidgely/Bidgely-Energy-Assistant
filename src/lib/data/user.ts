@@ -140,8 +140,8 @@ export const USER: User = {
   ],
 
   ev: {
-    make: 'Tesla',
-    model: 'Model 3',
+    make: 'Chevrolet',
+    model: 'Bolt EUV',
     year: 2022,
     milesPerYear: 12000,
     chargingStyle: 'home',
