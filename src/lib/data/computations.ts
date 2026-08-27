@@ -7,6 +7,13 @@ const PEAK_SUN_HRS = 5.0;
 const SYSTEM_EFF = 0.80;
 const COST_PER_KW = 3100;
 const FEDERAL_ITC = 0.30;
+// Generation beyond the home's own usage is exported to the grid and
+// credited at a fraction of the retail rate (net-metering export rates run
+// well below what you'd otherwise pay to buy that power back). Without this,
+// savings scale linearly with system size and payback comes out identical
+// for every size — this is what makes an oversized system's payback
+// actually get worse instead of staying flat.
+const EXPORT_RATE_FACTOR = 0.4;
 
 export type RoofSize = 'small' | 'medium' | 'large';
 export type ShadeLevel = 'none' | 'partial' | 'heavy';
@@ -84,7 +91,9 @@ export function computeSolarMetrics(
   const annualGenerationKwh = systemKw * PEAK_SUN_HRS * 365 * SYSTEM_EFF * shadeFactor * orientationFactor;
   const coveragePct = Math.min(100, Math.round((annualGenerationKwh / annualUsageKwh) * 100));
 
-  const annualSavings = Math.round(annualGenerationKwh * avgRate);
+  const selfConsumedKwh = Math.min(annualGenerationKwh, annualUsageKwh);
+  const exportedKwh = Math.max(0, annualGenerationKwh - annualUsageKwh);
+  const annualSavings = Math.round(selfConsumedKwh * avgRate + exportedKwh * avgRate * EXPORT_RATE_FACTOR);
   const monthlySavings = Math.round(annualSavings / 12);
 
   const grossCost = systemKw * installCostPerW * 1000;
@@ -192,7 +201,13 @@ export function buildDynamicSolarReport(
   const largerKw  = Math.round((m.systemKw + 3) * 10) / 10;
   function quickPayback(kw: number): { netCost: string; payback: string } {
     const netCost = kw * installCostPerW * 1000 * (1 - FEDERAL_ITC);
-    const annualSav = kw * PEAK_SUN_HRS * 365 * SYSTEM_EFF * SHADE_FACTOR[effShade] * ORIENTATION_FACTOR[orientation] * avgRate;
+    const generationKwh = kw * PEAK_SUN_HRS * 365 * SYSTEM_EFF * SHADE_FACTOR[effShade] * ORIENTATION_FACTOR[orientation];
+    // Same self-consumption-vs-export split as computeSolarMetrics, so a
+    // bigger system's extra, mostly-exported kWh don't get credited at full
+    // retail rate — otherwise every size comes out to the same payback.
+    const selfConsumedKwh = Math.min(generationKwh, m.annualUsageKwh);
+    const exportedKwh = Math.max(0, generationKwh - m.annualUsageKwh);
+    const annualSav = selfConsumedKwh * avgRate + exportedKwh * avgRate * EXPORT_RATE_FACTOR;
     return {
       netCost: `$${Math.round(netCost).toLocaleString()}`,
       payback: `${(netCost / annualSav).toFixed(1)} yrs`,
@@ -1364,11 +1379,11 @@ export function buildOptimizerReport(user: User): Report {
 }
 
 // buildOptimizerReportV2 — the "Analyse my latest bill" report. Same
-// appliance deep-dive + rate-plan sections as buildOptimizerReport, but this
-// customer is already on their best rate plan and has capital-investment
-// upgrades worth surfacing, so the summary card gains a third column and a
-// new "Small Tweaks" + "Capital Investments" pair of sections appears after
-// the rate-plan CTA. Per Figma 5401:4027 (HBO2).
+// appliance deep-dive + rate-plan sections as buildOptimizerReport, and this
+// customer also has capital-investment upgrades worth surfacing, so the
+// summary card gains a third column and a new "Small Tweaks" +
+// "Capital Investments" pair of sections appears after the rate-plan CTA.
+// Per Figma 5407:13681 (HBO2).
 export function buildOptimizerReportV2(user: User): Report {
   const base = buildOptimizerReport(user);
   const donutSection = base.sections.find((s) => s.type === 'bill-donut')!;
@@ -1405,10 +1420,10 @@ export function buildOptimizerReportV2(user: User): Report {
           },
           {
             icon: 'price-tag',
-            title: 'Rate Plan Optimization',
-            description: "We analyzed available rate plans and confirmed you're already on the most cost-effective option.",
-            savingsLabel: 'Status',
-            savingsAmount: '✓ Already optimized',
+            title: 'Best Rate',
+            description: 'Find the best rate plan for your energy use and ways to lower costs during peak hours.',
+            savingsLabel: 'Potential savings',
+            savingsAmount: '$420/year',
           },
           {
             icon: 'bar-chart',
