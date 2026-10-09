@@ -244,7 +244,12 @@ export default function SurveyForm({ kind }: { kind: 'solar' | 'ev' }) {
           </button>
 
           <div className="sv-hero">
-            <span className="sv-hero-icon"><img src={def.icon} alt="" width={26} height={26} /></span>
+            <span className="sv-hero-icon">
+              {/* Same markup as the home-screen chip, so the icon renders identically. */}
+              <span className="chip-icon" style={{ width: 28, height: 28 }}>
+                <img src={def.icon} alt="" width={28} height={28} style={{ width: 28, height: 28 }} />
+              </span>
+            </span>
             <div>
               <h2 className="sv-title">{def.title}</h2>
               <p className="sv-intro">{def.intro}</p>
