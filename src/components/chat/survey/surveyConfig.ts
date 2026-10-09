@@ -49,7 +49,6 @@ export interface Question {
 }
 
 export interface Section {
-  title: string;
   questions: Question[];
 }
 
@@ -75,7 +74,6 @@ export const SOLAR_SURVEY: SurveyDef = {
   submitLabel: 'Generate my Solar report',
   sections: [
     {
-      title: 'Your roof',
       questions: [
         {
           id: 'roof',
@@ -115,7 +113,6 @@ export const SOLAR_SURVEY: SurveyDef = {
       ],
     },
     {
-      title: 'Your costs',
       questions: [
         {
           id: 'cost',
@@ -143,7 +140,6 @@ export const EV_SURVEY: SurveyDef = {
   submitLabel: 'Generate my EV analysis',
   sections: [
     {
-      title: 'Your driving',
       questions: [
         {
           id: 'miles',
@@ -174,7 +170,6 @@ export const EV_SURVEY: SurveyDef = {
       ],
     },
     {
-      title: 'Your charging',
       questions: [
         {
           id: 'charging',

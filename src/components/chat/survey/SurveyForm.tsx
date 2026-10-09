@@ -274,10 +274,7 @@ export default function SurveyForm({ kind }: { kind: 'solar' | 'ev' }) {
             const qs = section.questions.filter((q) => isVisible(q, answers));
             if (qs.length === 0) return null;
             return (
-              <section key={section.title} className="sv-section">
-                <div className="sv-section-head">
-                  <h3>{section.title}</h3>
-                </div>
+              <section key={qs[0].id} className="sv-section">
                 {qs.map((q) => {
                   counter += 1;
                   return (

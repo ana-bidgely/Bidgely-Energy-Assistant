@@ -1124,16 +1124,13 @@ button { font-family: inherit; }
 }
 .sv-back:hover { color: var(--primary); }
 
-.sv-hero { display: flex; gap: 14px; align-items: center; margin-bottom: 8px; }
+.sv-hero { display: flex; gap: 14px; align-items: center; margin-bottom: 24px; }
 .sv-hero-icon {
   flex: none; width: 48px; height: 48px; border-radius: 14px;
   background: var(--primary-10); display: grid; place-items: center;
 }
 .sv-title { margin: 0 0 4px; font-size: 22px; line-height: 28px; font-weight: 700; color: var(--text-primary); }
 
-.sv-section { margin-top: 28px; }
-.sv-section-head { padding-bottom: 10px; margin-bottom: 18px; border-bottom: 1px solid var(--stroke-tertiary); }
-.sv-section-head h3 { margin: 0; font-size: 12px; line-height: 16px; letter-spacing: .08em; text-transform: uppercase; font-weight: 700; color: var(--primary); }
 
 .sv-question { margin-bottom: 26px; }
 .sv-q-head { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; }
