@@ -3,8 +3,6 @@
 import { useState } from 'react';
 import { useChatStore } from '@/lib/chat/store';
 import { advanceFlowStep } from '@/lib/chat/flows/advance';
-import { getEvStep } from '@/lib/chat/flows/ev';
-import { getSolarRefineStep } from '@/lib/chat/flows/solar';
 import { dispatchInput } from '@/lib/chat/responses';
 
 export default function InputBar() {
@@ -17,7 +15,7 @@ export default function InputBar() {
     flowStep,
     flowData,
     advanceFlow,
-    setFlow,
+    startSurvey,
     resetFlow,
     setEvInputs,
     setSolarInputs,
@@ -50,12 +48,8 @@ export default function InputBar() {
 
       // 2. Otherwise dispatch as free text
       const result = dispatchInput(text);
-      if (result.startFlow === 'ev') {
-        setFlow('ev', 0, {});
-        addMessage(getEvStep(0, {}));
-      } else if (result.startFlow === 'solar') {
-        setFlow('solar', 0, {});
-        addMessage(getSolarRefineStep(0, {}));
+      if (result.startFlow) {
+        startSurvey(result.startFlow);
       } else {
         addMessage(result.message);
         if (result.followUp) addMessage(result.followUp);

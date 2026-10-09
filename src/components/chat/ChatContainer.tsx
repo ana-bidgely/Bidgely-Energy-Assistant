@@ -7,9 +7,10 @@ import MessageThread from './MessageThread';
 import InputBar from './InputBar';
 import ChatHistorySidebar from './ChatHistorySidebar';
 import RightPanel from '@/components/panels/RightPanel';
+import SurveyForm from './survey/SurveyForm';
 
 export default function ChatContainer() {
-  const { chatMode, activePanel, sidebarOpen } = useChatStore();
+  const { chatMode, activePanel, sidebarOpen, survey } = useChatStore();
 
   return (
     <div id="app">
@@ -19,7 +20,9 @@ export default function ChatContainer() {
           <ChatHistorySidebar />
         </div>
         <div id="main-panel">
-          {chatMode ? (
+          {survey ? (
+            <SurveyForm key={survey} kind={survey} />
+          ) : chatMode ? (
             <div id="chat-screen" className="visible">
               <MessageThread />
               <InputBar />

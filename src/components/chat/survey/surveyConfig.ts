@@ -1,0 +1,319 @@
+import type { ArtName } from './illustrations';
+import type { FlowData } from '@/lib/chat/types';
+
+// The survey is entirely config-driven: each survey is a list of sections,
+// each section a list of questions, each question a grid of option cards.
+// A question with a `custom` mask also gets a "Custom" card that reveals a
+// masked, range-checked input — the only place the user ever types, so the
+// system never receives free-form text it can't parse.
+
+export interface Mask {
+  /** Shown inside the input before the number, e.g. "$". */
+  prefix?: string;
+  /** Unit shown after the number, e.g. "sq ft". */
+  suffix: string;
+  /** Digits allowed after the decimal point (0 = whole numbers only). */
+  decimals: 0 | 1 | 2;
+  min: number;
+  max: number;
+  placeholder: string;
+  /** Max characters of the raw input, including the decimal point. */
+  maxLen: number;
+}
+
+export interface Opt {
+  value: string;
+  label: string;
+  sub?: string;
+  /** Small tag on the card, e.g. "Most common". */
+  badge?: string;
+  art: ArtName;
+  /** Rendered quieter than the real choices (the "Not sure" escape hatch). */
+  muted?: boolean;
+}
+
+export type Answers = Record<string, { choice?: string; custom?: string }>;
+
+export interface Question {
+  id: string;
+  title: string;
+  hint?: string;
+  options: Opt[];
+  custom?: Mask;
+  /** Cards per row on a full-width screen. */
+  cols: 2 | 3 | 4;
+  /** Hidden (and not required) when this returns false. */
+  showIf?: (a: Answers) => boolean;
+}
+
+export interface Section {
+  title: string;
+  subtitle: string;
+  questions: Question[];
+}
+
+export interface SurveyDef {
+  kind: 'solar' | 'ev';
+  title: string;
+  intro: string;
+  icon: string;
+  submitLabel: string;
+  sections: Section[];
+}
+
+export const maskRangeText = (m: Mask) => {
+  const fmt = (n: number) => n.toLocaleString('en-US', { minimumFractionDigits: m.decimals, maximumFractionDigits: m.decimals });
+  return `${m.prefix ?? ''}${fmt(m.min)}–${m.prefix ?? ''}${fmt(m.max)} ${m.suffix}`;
+};
+
+// ─── Solar ──────────────────────────────────────────────────────────────────
+
+export const SOLAR_SURVEY: SurveyDef = {
+  kind: 'solar',
+  title: 'Is solar right for your home?',
+  intro:
+    'Tell us a bit about your roof and your costs and we’ll build your Solar Savings Report. Tap an answer for each question — no typing needed.',
+  icon: '/welcome/solar.svg',
+  submitLabel: 'Generate my Solar report',
+  sections: [
+    {
+      title: 'Your roof',
+      subtitle: 'These three decide how much power your panels can make.',
+      questions: [
+        {
+          id: 'roof',
+          title: 'How much usable roof space do you have?',
+          hint: 'Count only the space free of vents, chimneys and skylights.',
+          cols: 3,
+          options: [
+            { value: 'small', label: 'Small', sub: '~400 sq ft', art: 'roof-small' },
+            { value: 'medium', label: 'Medium', sub: '~700 sq ft', art: 'roof-medium' },
+            { value: 'large', label: 'Large', sub: '~1,000 sq ft', art: 'roof-large' },
+            { value: 'skip', label: 'Not sure', sub: 'Use the estimate', art: 'unknown', muted: true },
+          ],
+          custom: { suffix: 'sq ft', decimals: 0, min: 100, max: 3000, placeholder: 'e.g. 650', maxLen: 4 },
+        },
+        {
+          id: 'orientation',
+          title: 'Which way does your roof mainly face?',
+          hint: 'South-facing roofs catch the most sun in the northern hemisphere.',
+          cols: 4,
+          options: [
+            { value: 'south', label: 'South', sub: 'Best yield', badge: 'Best', art: 'dir-south' },
+            { value: 'east', label: 'East', sub: '~7% less', art: 'dir-east' },
+            { value: 'west', label: 'West', sub: '~7% less', art: 'dir-west' },
+            { value: 'north', label: 'North', sub: '~22% less', art: 'dir-north' },
+            { value: 'skip', label: 'Not sure', sub: 'Use the estimate', art: 'unknown', muted: true },
+          ],
+        },
+        {
+          id: 'shade',
+          title: 'How much shade does your roof get during the day?',
+          cols: 3,
+          options: [
+            { value: 'none', label: 'None', sub: 'Full sun all day', art: 'shade-none' },
+            { value: 'partial', label: 'Partial', sub: 'Some trees or buildings', art: 'shade-partial' },
+            { value: 'heavy', label: 'Heavy', sub: 'Shaded most of the day', art: 'shade-heavy' },
+            { value: 'skip', label: 'Not sure', sub: 'Use the estimate', art: 'unknown', muted: true },
+          ],
+        },
+      ],
+    },
+    {
+      title: 'Your costs',
+      subtitle: 'Used to work out your payback period.',
+      questions: [
+        {
+          id: 'cost',
+          title: 'What install price per watt are you looking at?',
+          hint: 'If you have an installer quote, divide the total price by the system watts.',
+          cols: 3,
+          options: [
+            { value: '2.5', label: '$2.50 / W', sub: 'Great deal', art: 'price-low' },
+            { value: '2.8', label: '$2.80 / W', sub: 'Competitive', art: 'price-mid' },
+            { value: '3.1', label: '$3.10 / W', sub: 'Typical', badge: 'Typical', art: 'price-high' },
+            { value: 'skip', label: 'No quote yet', sub: 'Use typical pricing', art: 'unknown', muted: true },
+          ],
+          custom: { prefix: '$', suffix: '/ W', decimals: 2, min: 1.5, max: 6, placeholder: '3.10', maxLen: 4 },
+        },
+      ],
+    },
+  ],
+};
+
+// ─── EV ─────────────────────────────────────────────────────────────────────
+
+export const EV_SURVEY: SurveyDef = {
+  kind: 'ev',
+  title: 'Is an EV right for you?',
+  intro:
+    'Tell us how you drive and where you’d charge and we’ll compare an EV against your current car. Tap an answer for each question — no typing needed.',
+  icon: '/welcome/ev.svg',
+  submitLabel: 'Generate my EV analysis',
+  sections: [
+    {
+      title: 'Your driving',
+      subtitle: 'Used to estimate your fuel costs today.',
+      questions: [
+        {
+          id: 'miles',
+          title: 'How many miles do you drive per month?',
+          cols: 3,
+          options: [
+            { value: '300', label: '300 miles', sub: 'Light driving', art: 'miles-300' },
+            { value: '500', label: '500 miles', sub: 'Short commute', art: 'miles-500' },
+            { value: '1000', label: '1,000 miles', sub: 'Most common', badge: 'Most common', art: 'miles-1000' },
+            { value: '1500', label: '1,500 miles', sub: 'Heavy driving', art: 'miles-1500' },
+          ],
+          custom: { suffix: 'miles / month', decimals: 0, min: 50, max: 5000, placeholder: 'e.g. 800', maxLen: 4 },
+        },
+        {
+          id: 'mpg',
+          title: 'What’s the fuel economy of your current car?',
+          cols: 4,
+          options: [
+            { value: '20', label: '20 mpg', sub: 'SUV / truck', art: 'mpg' },
+            { value: '25', label: '25 mpg', sub: 'Mid-size', art: 'mpg' },
+            { value: '30', label: '30 mpg', sub: 'Compact', art: 'mpg' },
+            { value: 'unknown', label: 'I don’t know', sub: 'We’ll assume 28 mpg', art: 'unknown', muted: true },
+          ],
+          custom: { suffix: 'mpg', decimals: 0, min: 5, max: 100, placeholder: 'e.g. 27', maxLen: 3 },
+        },
+      ],
+    },
+    {
+      title: 'Your charging',
+      subtitle: 'Where and when you charge sets your cost per mile.',
+      questions: [
+        {
+          id: 'charging',
+          title: 'Where would you mainly charge your EV?',
+          cols: 2,
+          options: [
+            { value: 'home', label: '100% at home', sub: 'Cheapest — best rate-plan savings', art: 'charge-home' },
+            { value: 'public', label: '100% public', sub: 'Public stations only', art: 'charge-public' },
+          ],
+        },
+        {
+          id: 'offpeak',
+          title: 'Could you charge off-peak (12 AM – 6 AM)?',
+          hint: 'Overnight charging gets the lowest electricity rate.',
+          cols: 2,
+          showIf: (a) => a.charging?.choice === 'home',
+          options: [
+            { value: 'yes', label: 'Yes, off-peak', sub: 'Lowest rate', art: 'offpeak-yes' },
+            { value: 'no', label: 'No, my own hours', sub: 'Standard rate', art: 'offpeak-no' },
+          ],
+        },
+      ],
+    },
+  ],
+};
+
+// ─── Masked input helpers ───────────────────────────────────────────────────
+
+/** Strip anything that isn't a digit (or a single decimal point, when
+ *  decimals are allowed), and cap the digits after the point. */
+export function sanitize(raw: string, m: Mask): string {
+  let out = '';
+  let seenDot = false;
+  let decimalsUsed = 0;
+  for (const ch of raw) {
+    if (ch >= '0' && ch <= '9') {
+      if (seenDot) {
+        if (decimalsUsed >= m.decimals) continue;
+        decimalsUsed++;
+      }
+      out += ch;
+    } else if (ch === '.' && m.decimals > 0 && !seenDot) {
+      seenDot = true;
+      out += ch;
+    }
+  }
+  return out.slice(0, m.maxLen);
+}
+
+export function parseCustom(raw: string | undefined, m: Mask): number | null {
+  if (!raw) return null;
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n < m.min || n > m.max) return null;
+  return n;
+}
+
+export function isVisible(q: Question, a: Answers): boolean {
+  return q.showIf ? q.showIf(a) : true;
+}
+
+/** A question is complete once an option is picked, and — for "Custom" —
+ *  once the typed value is inside the allowed range. */
+export function isComplete(q: Question, a: Answers): boolean {
+  const ans = a[q.id];
+  if (!ans?.choice) return false;
+  if (ans.choice === 'custom') return q.custom ? parseCustom(ans.custom, q.custom) !== null : false;
+  return true;
+}
+
+// ─── Answers → report-builder inputs ────────────────────────────────────────
+
+const numberOf = (a: Answers, q: Question): number | undefined => {
+  const ans = a[q.id];
+  if (!ans?.choice) return undefined;
+  if (ans.choice === 'custom') return q.custom ? parseCustom(ans.custom, q.custom) ?? undefined : undefined;
+  const n = Number(ans.choice);
+  return Number.isFinite(n) ? n : undefined;
+};
+
+const questionOf = (def: SurveyDef, id: string): Question =>
+  def.sections.flatMap((s) => s.questions).find((q) => q.id === id)!;
+
+/** Custom roof area → the nearest of the three modelled roof sizes. */
+function roofFromSqFt(sqFt: number): 'small' | 'medium' | 'large' {
+  if (sqFt <= 550) return 'small';
+  if (sqFt <= 850) return 'medium';
+  return 'large';
+}
+
+export function solarAnswersToData(a: Answers): FlowData {
+  const data: FlowData = {};
+  const roof = a.roof?.choice;
+  if (roof === 'custom') {
+    const sq = numberOf(a, questionOf(SOLAR_SURVEY, 'roof'));
+    if (sq !== undefined) data.roof = roofFromSqFt(sq);
+  } else if (roof && roof !== 'skip') {
+    data.roof = roof as 'small' | 'medium' | 'large';
+  }
+  const orientation = a.orientation?.choice;
+  if (orientation && orientation !== 'skip') data.orientation = orientation as 'south' | 'east' | 'west' | 'north';
+  const shade = a.shade?.choice;
+  if (shade && shade !== 'skip') data.shade = shade as 'none' | 'partial' | 'heavy';
+  if (a.cost?.choice !== 'skip') {
+    const cost = numberOf(a, questionOf(SOLAR_SURVEY, 'cost'));
+    if (cost !== undefined) data.installCostPerW = cost;
+  }
+  return data;
+}
+
+export function evAnswersToData(a: Answers): FlowData {
+  const data: FlowData = {};
+  const miles = numberOf(a, questionOf(EV_SURVEY, 'miles'));
+  if (miles !== undefined) data.miles = miles;
+  data.mpg = a.mpg?.choice === 'unknown' ? 28 : numberOf(a, questionOf(EV_SURVEY, 'mpg'));
+  data.charging = (a.charging?.choice as 'home' | 'public') ?? 'home';
+  // Public charging has no off-peak choice — leave undefined (defaults on).
+  if (data.charging === 'home') data.offPeak = a.offpeak?.choice !== 'no';
+  return data;
+}
+
+/** Human-readable recap of each answer, for the chat summary after submit. */
+export function describeAnswer(def: SurveyDef, q: Question, a: Answers): string {
+  const ans = a[q.id];
+  if (!ans?.choice) return '—';
+  if (ans.choice === 'custom' && q.custom) {
+    const n = parseCustom(ans.custom, q.custom);
+    return n === null ? '—' : `${q.custom.prefix ?? ''}${n.toLocaleString('en-US')} ${q.custom.suffix}`;
+  }
+  const opt = q.options.find((o) => o.value === ans.choice);
+  if (!opt) return '—';
+  if (opt.muted) return opt.sub ?? opt.label;
+  return opt.sub && !opt.badge && q.id === 'roof' ? `${opt.label} (${opt.sub})` : opt.label;
+}

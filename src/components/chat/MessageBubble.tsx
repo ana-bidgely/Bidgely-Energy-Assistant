@@ -2,8 +2,6 @@
 
 import { useChatStore } from '@/lib/chat/store';
 import { advanceFlowStep } from '@/lib/chat/flows/advance';
-import { getEvStep } from '@/lib/chat/flows/ev';
-import { getSolarRefineStep } from '@/lib/chat/flows/solar';
 import { dispatchInput } from '@/lib/chat/responses';
 import type { ChatMessage, MessageOption } from '@/lib/chat/types';
 import ChatWidgetRenderer from './widgets/ChatWidgetRenderer';
@@ -60,7 +58,7 @@ export default function MessageBubble({ message, isLast }: Props) {
     flowStep,
     flowData,
     advanceFlow,
-    setFlow,
+    startSurvey,
     resetFlow,
     setEvInputs,
     setSolarInputs,
@@ -101,12 +99,8 @@ export default function MessageBubble({ message, isLast }: Props) {
 
       // 3. Everything else (panel-open sentinels, free-text intents) → dispatcher
       const result = dispatchInput(opt.value);
-      if (result.startFlow === 'ev') {
-        setFlow('ev', 0, {});
-        addMessage(getEvStep(0, {}));
-      } else if (result.startFlow === 'solar') {
-        setFlow('solar', 0, {});
-        addMessage(getSolarRefineStep(0, {}));
+      if (result.startFlow) {
+        startSurvey(result.startFlow);
       } else {
         addMessage(result.message);
         if (result.followUp) addMessage(result.followUp);

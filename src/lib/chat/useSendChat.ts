@@ -7,15 +7,13 @@
 
 import { useChatStore } from './store';
 import { dispatchInput } from './responses';
-import { getEvMessage } from './flows/ev';
-import { getSolarRefineStep } from './flows/solar';
 
 export function useSendChat() {
   const setChatMode = useChatStore((s) => s.setChatMode);
   const addMessage = useChatStore((s) => s.addMessage);
   const setIsTyping = useChatStore((s) => s.setIsTyping);
   const openPanel = useChatStore((s) => s.openPanel);
-  const setFlow = useChatStore((s) => s.setFlow);
+  const startSurvey = useChatStore((s) => s.startSurvey);
 
   return function send(text: string) {
     const trimmed = text.trim();
@@ -33,12 +31,8 @@ export function useSendChat() {
     setTimeout(() => {
       setIsTyping(false);
       const result = dispatchInput(trimmed);
-      if (result.startFlow === 'ev') {
-        setFlow('ev', 0, {});
-        addMessage(getEvMessage());
-      } else if (result.startFlow === 'solar') {
-        setFlow('solar', 0, {});
-        addMessage(getSolarRefineStep(0, {}));
+      if (result.startFlow) {
+        startSurvey(result.startFlow);
       } else {
         addMessage(result.message);
         if (result.followUp) addMessage(result.followUp);

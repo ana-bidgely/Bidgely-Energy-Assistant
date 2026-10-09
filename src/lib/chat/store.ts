@@ -43,6 +43,10 @@ interface ChatStore {
   flowStep: number;
   flowData: FlowData;
 
+  // Visual one-screen survey (replaces the chat Q&A for Solar and EV).
+  // While set, the main panel shows the survey form instead of the thread.
+  survey: 'solar' | 'ev' | null;
+
   // Last completed EV flow's answers — kept separate from flowData (which
   // resetFlow() clears) so the EV report keeps reflecting them after the
   // flow finishes and the panel opens.
@@ -74,6 +78,8 @@ interface ChatStore {
   setFlow: (flow: FlowName, step?: number, data?: FlowData) => void;
   advanceFlow: (step: number, data?: Partial<FlowData>) => void;
   resetFlow: () => void;
+  startSurvey: (kind: 'solar' | 'ev') => void;
+  closeSurvey: () => void;
   setEvInputs: (inputs: EvInputs) => void;
   setSolarInputs: (inputs: SolarInputs) => void;
   setPanelDownloadHandler: (handler: (() => void | Promise<void>) | null) => void;
@@ -92,6 +98,7 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
   flow: null,
   flowStep: 0,
   flowData: {},
+  survey: null,
   evInputs: null,
   solarInputs: null,
   panelDownloadHandler: null,
@@ -109,6 +116,7 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
     flow: null,
     flowStep: 0,
     flowData: {},
+    survey: null,
     panelDownloadHandler: null,
     sidebarOpen: false,
   }),
@@ -139,6 +147,8 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
     set((s) => ({ flowStep: step, flowData: { ...s.flowData, ...data } })),
 
   resetFlow: () => set({ flow: null, flowStep: 0, flowData: {} }),
+  startSurvey: (kind) => set({ survey: kind, activePanel: null, panelTitle: '', panelLoading: false }),
+  closeSurvey: () => set({ survey: null }),
   setEvInputs: (inputs) => set({ evInputs: inputs }),
   setSolarInputs: (inputs) => set({ solarInputs: inputs }),
   toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
