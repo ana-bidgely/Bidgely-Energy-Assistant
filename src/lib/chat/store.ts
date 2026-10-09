@@ -2,6 +2,7 @@
 
 import { create } from 'zustand';
 import type { ChatMessage, FlowName, FlowData, PanelKey, EvInputs, SolarInputs } from './types';
+import type { Answers } from '@/components/chat/survey/surveyConfig';
 
 // Panels that require a fake 4-second load (mirrors original HTML)
 const PANELS_REQUIRING_LOAD = new Set<PanelKey>([
@@ -46,6 +47,9 @@ interface ChatStore {
   // Visual one-screen survey (replaces the chat Q&A for Solar and EV).
   // While set, the main panel shows the survey form instead of the thread.
   survey: 'solar' | 'ev' | null;
+  // In-progress survey answers, kept so leaving the survey and reopening it
+  // resumes exactly where the user left off.
+  surveyAnswers: { solar: Answers; ev: Answers };
 
   // Last completed EV flow's answers — kept separate from flowData (which
   // resetFlow() clears) so the EV report keeps reflecting them after the
@@ -80,6 +84,7 @@ interface ChatStore {
   resetFlow: () => void;
   startSurvey: (kind: 'solar' | 'ev') => void;
   closeSurvey: () => void;
+  setSurveyAnswers: (kind: 'solar' | 'ev', answers: Answers) => void;
   setEvInputs: (inputs: EvInputs) => void;
   setSolarInputs: (inputs: SolarInputs) => void;
   setPanelDownloadHandler: (handler: (() => void | Promise<void>) | null) => void;
@@ -99,6 +104,7 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
   flowStep: 0,
   flowData: {},
   survey: null,
+  surveyAnswers: { solar: {}, ev: {} },
   evInputs: null,
   solarInputs: null,
   panelDownloadHandler: null,
@@ -117,6 +123,7 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
     flowStep: 0,
     flowData: {},
     survey: null,
+    surveyAnswers: { solar: {}, ev: {} },
     panelDownloadHandler: null,
     sidebarOpen: false,
   }),
@@ -149,6 +156,7 @@ export const useChatStore = create<ChatStore>()((set, get) => ({
   resetFlow: () => set({ flow: null, flowStep: 0, flowData: {} }),
   startSurvey: (kind) => set({ survey: kind, activePanel: null, panelTitle: '', panelLoading: false }),
   closeSurvey: () => set({ survey: null }),
+  setSurveyAnswers: (kind, answers) => set((s) => ({ surveyAnswers: { ...s.surveyAnswers, [kind]: answers } })),
   setEvInputs: (inputs) => set({ evInputs: inputs }),
   setSolarInputs: (inputs) => set({ solarInputs: inputs }),
   toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),

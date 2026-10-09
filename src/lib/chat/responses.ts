@@ -65,8 +65,11 @@ export function dispatchInput(input: string): DispatchResult {
   }
   // Kicks off the solar "What if?" refine flow — offered right after the
   // auto-detected Solar Savings Report is shown (see intent 5 below).
-  if (raw === '__start_solar_refine__') {
+  if (raw === '__start_solar_refine__' || raw === '__open_survey_solar__') {
     return { message: msg(''), startFlow: 'solar' };
+  }
+  if (raw === '__open_survey_ev__') {
+    return { message: msg(''), startFlow: 'ev' };
   }
   // Each panel-open response carries BOTH a reportCard chip (so the user can
   // re-open the panel later from the chat thread) AND the openPanel directive

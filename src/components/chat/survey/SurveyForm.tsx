@@ -165,7 +165,10 @@ export default function SurveyForm({ kind }: { kind: 'solar' | 'ev' }) {
   const openPanel = useChatStore((s) => s.openPanel);
   const setSolarInputs = useChatStore((s) => s.setSolarInputs);
   const setEvInputs = useChatStore((s) => s.setEvInputs);
-  const [answers, setAnswers] = useState<Answers>({});
+  const answers = useChatStore((s) => s.surveyAnswers[kind]);
+  const setSurveyAnswers = useChatStore((s) => s.setSurveyAnswers);
+  const setAnswers = (fn: (a: Answers) => Answers) =>
+    setSurveyAnswers(kind, fn(useChatStore.getState().surveyAnswers[kind]));
 
   const visibleQuestions = useMemo(
     () => def.sections.flatMap((s) => s.questions).filter((q) => isVisible(q, answers)),
@@ -179,6 +182,25 @@ export default function SurveyForm({ kind }: { kind: 'solar' | 'ev' }) {
   }
   function setCustom(q: Question, value: string) {
     setAnswers((a) => ({ ...a, [q.id]: { choice: 'custom', custom: value } }));
+  }
+
+  /** Leaving mid-survey: say something useful and offer a way back in. */
+  function goBack() {
+    const started = Object.keys(answers).length > 0;
+    const label = kind === 'solar' ? 'Solar' : 'EV';
+    const text = started
+      ? `No problem — I’ve saved your answers, so you can pick up the ${label} check right where you left off.`
+      : `No problem — whenever you’re ready, the ${label} check takes about a minute and I’ll build your report straight after.`;
+    closeSurvey();
+    addMessage({
+      id: uid(),
+      role: 'assistant',
+      timestamp: Date.now(),
+      text,
+      options: [
+        { label: started ? `Continue ${label} survey` : `Open ${label} survey`, value: `__open_survey_${kind}__` },
+      ],
+    });
   }
 
   function submit() {
@@ -238,7 +260,7 @@ export default function SurveyForm({ kind }: { kind: 'solar' | 'ev' }) {
     <div className="sv-root">
       <div className="sv-scroll">
         <div className="sv-inner">
-          <button type="button" className="sv-back" onClick={closeSurvey}>
+          <button type="button" className="sv-back" onClick={goBack}>
             <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M10 3L5 8l5 5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
             Back to chat
           </button>
