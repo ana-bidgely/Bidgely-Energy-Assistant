@@ -13,7 +13,6 @@ const SLATE = '#3B4A63';
 const SLATE_LIGHT = '#94A3B8';
 const GREEN = '#34B16B';
 const SUN_RAY = '#FFC83D';
-const SUN_GOLD = '#F5B82E';
 const INK = '#3B4A63';
 const CAR = '#1B6FD6';
 
@@ -38,10 +37,20 @@ export type ArtName =
   | 'custom'
   | 'unknown';
 
-function Frame({ children }: { children: React.ReactNode }) {
+/** `tone` is neutral grey everywhere except the off-peak pair, which keeps a
+ *  blue day sky / navy night sky because the choice IS day vs night. */
+function Frame({ children, tone = 'neutral' }: { children: React.ReactNode; tone?: 'neutral' | 'day' | 'night' }) {
   return (
     <svg viewBox="0 0 120 80" width="100%" height="100%" role="img" aria-hidden="true" preserveAspectRatio="xMidYMid slice">
       <defs>
+        <linearGradient id="sv-sky-day" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#1B6FD6" />
+          <stop offset="1" stopColor="#5CC3F8" />
+        </linearGradient>
+        <linearGradient id="sv-sky-night" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#0B2E50" />
+          <stop offset="1" stopColor="#2A6288" />
+        </linearGradient>
         <linearGradient id="sv-bg" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor="#D6DDE8" />
           <stop offset="1" stopColor="#F0F3F8" />
@@ -55,16 +64,12 @@ function Frame({ children }: { children: React.ReactNode }) {
           <stop offset="0" stopColor="#FFD60A" />
           <stop offset="1" stopColor="#FFB800" />
         </linearGradient>
-        <linearGradient id="sv-moon" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#FFD84D" />
-          <stop offset="1" stopColor="#F5A91E" />
-        </linearGradient>
         <linearGradient id="sv-tree" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor="#7BD88F" />
           <stop offset="1" stopColor="#2FA760" />
         </linearGradient>
       </defs>
-      <rect width="120" height="80" fill="url(#sv-bg)" />
+      <rect width="120" height="80" fill={tone === 'day' ? 'url(#sv-sky-day)' : tone === 'night' ? 'url(#sv-sky-night)' : 'url(#sv-bg)'} />
       {children}
     </svg>
   );
@@ -269,20 +274,20 @@ function PublicChargeArt() {
 // ─── Off-peak ───────────────────────────────────────────────────────────────
 
 function Sparkle({ x, y, s }: { x: number; y: number; s: number }) {
-  return <path transform={`translate(${x} ${y}) scale(${s})`} d="M0-4Q.6-.6 4 0Q.6.6 0 4Q-.6.6-4 0Q-.6-.6 0-4Z" fill={SUN_GOLD} />;
+  return <path transform={`translate(${x} ${y}) scale(${s})`} d="M0-4Q.6-.6 4 0Q.6.6 0 4Q-.6.6-4 0Q-.6-.6 0-4Z" fill={WHITE} />;
 }
 
 function OffPeakArt({ night }: { night: boolean }) {
   return night ? (
-    <Frame>
-      <path d="M70 17a23 23 0 1 0 15 40A18 18 0 0 1 70 17z" fill="url(#sv-moon)" />
+    <Frame tone="night">
+      <path d="M70 17a23 23 0 1 0 15 40A18 18 0 0 1 70 17z" fill="#FFF3C4" />
       <Sparkle x={34} y={24} s={2.4} />
       <Sparkle x={100} y={26} s={1.6} />
       <Sparkle x={26} y={54} s={1.5} />
       <Sparkle x={96} y={58} s={1.8} />
     </Frame>
   ) : (
-    <Frame>
+    <Frame tone="day">
       <Sun x={60} y={40} r={15} />
     </Frame>
   );
