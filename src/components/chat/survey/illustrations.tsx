@@ -1,10 +1,10 @@
 // Survey illustrations — one visual system, modelled on Apple's Weather icons.
 //
-//  • 120×80 tile with a soft vertical sky gradient (day blue / night navy).
+//  • 120×80 tile on a soft, neutral light-grey gradient with a hint of blue.
 //  • Glossy white→pale-blue clouds, a golden sun with light rays, flat shapes.
 //  • ONE house (the roof-size house) is reused everywhere a house appears, so
 //    roof size, shade and home charging all show the same home.
-//  • One white EV reused in both charging scenes.
+//  • One blue EV reused in both charging scenes.
 
 const WHITE = '#FFFFFF';
 const BLUE_LIGHT = '#CFE0FB';
@@ -12,8 +12,10 @@ const PANEL = '#3E8DF5';
 const SLATE = '#3B4A63';
 const SLATE_LIGHT = '#94A3B8';
 const GREEN = '#34B16B';
-const SUN_RAY = '#FFE066';
-const MOON = '#FFF3C4';
+const SUN_RAY = '#FFC83D';
+const SUN_GOLD = '#F5B82E';
+const INK = '#3B4A63';
+const CAR = '#1B6FD6';
 
 export type ArtName =
   | 'roof-small'
@@ -36,33 +38,33 @@ export type ArtName =
   | 'custom'
   | 'unknown';
 
-function Frame({ children, night = false }: { children: React.ReactNode; night?: boolean }) {
+function Frame({ children }: { children: React.ReactNode }) {
   return (
     <svg viewBox="0 0 120 80" width="100%" height="100%" role="img" aria-hidden="true" preserveAspectRatio="xMidYMid slice">
       <defs>
-        <linearGradient id="sv-sky-day" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#1B6FD6" />
-          <stop offset="1" stopColor="#5CC3F8" />
-        </linearGradient>
-        <linearGradient id="sv-sky-night" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#0B2E50" />
-          <stop offset="1" stopColor="#2A6288" />
+        <linearGradient id="sv-bg" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#D6DDE8" />
+          <stop offset="1" stopColor="#F0F3F8" />
         </linearGradient>
         {/* userSpaceOnUse so every shape of one cloud shares a single gradient */}
         <linearGradient id="sv-cloud" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="38">
           <stop offset="0" stopColor="#FFFFFF" />
-          <stop offset="1" stopColor="#A8CBF3" />
+          <stop offset="1" stopColor="#B6C8E0" />
         </linearGradient>
         <linearGradient id="sv-sun" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0" stopColor="#FFD60A" />
           <stop offset="1" stopColor="#FFB800" />
+        </linearGradient>
+        <linearGradient id="sv-moon" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#FFD84D" />
+          <stop offset="1" stopColor="#F5A91E" />
         </linearGradient>
         <linearGradient id="sv-tree" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor="#7BD88F" />
           <stop offset="1" stopColor="#2FA760" />
         </linearGradient>
       </defs>
-      <rect width="120" height="80" fill={night ? 'url(#sv-sky-night)' : 'url(#sv-sky-day)'} />
+      <rect width="120" height="80" fill="url(#sv-bg)" />
       {children}
     </svg>
   );
@@ -71,7 +73,7 @@ function Frame({ children, night = false }: { children: React.ReactNode; night?:
 // ─── Shared building blocks ─────────────────────────────────────────────────
 
 function Ground({ y = 64 }: { y?: number }) {
-  return <rect y={y} width="120" height={80 - y} fill={WHITE} opacity="0.22" />;
+  return <rect y={y} width="120" height={80 - y} fill="#B9C5D8" opacity="0.4" />;
 }
 
 /** The house. Drawn on the full 120×80 canvas; `top` / `bottom` are the
@@ -137,13 +139,13 @@ function Tree({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
   );
 }
 
-/** Side-view EV facing right, white like the clouds. Origin = top-left; 34×15. */
+/** Side-view EV facing right, in brand blue. Origin = top-left; 34×15. */
 function Car({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
   return (
     <g transform={`translate(${x} ${y}) scale(${s})`}>
-      <path d="M1 11V8.6Q1 7 2.8 6.6L8 5.2Q10 1.5 14 1.5H21Q24 1.5 26 5L30 6.2Q33 6.8 33 9V11Q33 12 32 12H2Q1 12 1 11Z" fill={WHITE} />
-      <path d="M10.2 5Q11.5 3.1 14 3.1H16.2V5Z" fill="#7FB6F0" />
-      <path d="M17.6 3.1H21Q22.6 3.1 23.7 5H17.6Z" fill="#7FB6F0" />
+      <path d="M1 11V8.6Q1 7 2.8 6.6L8 5.2Q10 1.5 14 1.5H21Q24 1.5 26 5L30 6.2Q33 6.8 33 9V11Q33 12 32 12H2Q1 12 1 11Z" fill={CAR} />
+      <path d="M10.2 5Q11.5 3.1 14 3.1H16.2V5Z" fill="#CFE0FB" />
+      <path d="M17.6 3.1H21Q22.6 3.1 23.7 5H17.6Z" fill="#CFE0FB" />
       <circle cx="9.5" cy="12" r="3.2" fill={SLATE} />
       <circle cx="9.5" cy="12" r="1.2" fill={BLUE_LIGHT} />
       <circle cx="25" cy="12" r="3.2" fill={SLATE} />
@@ -229,7 +231,7 @@ function ShadeArt({ level }: { level: 'none' | 'partial' | 'heavy' }) {
 function DollarArt({ n }: { n: 1 | 2 | 3 }) {
   return (
     <Frame>
-      <text x="60" y="54" fontSize={n === 1 ? 44 : n === 2 ? 38 : 32} fontWeight="800" textAnchor="middle" fill={WHITE} letterSpacing="1">
+      <text x="60" y="54" fontSize={n === 1 ? 44 : n === 2 ? 38 : 32} fontWeight="800" textAnchor="middle" fill={INK} letterSpacing="1">
         {'$'.repeat(n)}
       </text>
     </Frame>
@@ -244,7 +246,7 @@ function HomeChargeArt() {
       <Ground />
       <PlacedHouse cx={34} baseY={66} s={0.62} />
       <rect x="50" y="49" width="6" height="11" rx="2" fill={GREEN} />
-      <path d="M56 56Q65 56 67 61" fill="none" stroke={WHITE} strokeWidth="2" strokeLinecap="round" />
+      <path d="M56 56Q65 56 67 61" fill="none" stroke={INK} strokeWidth="2" strokeLinecap="round" />
       <Car x={68} y={52} s={1.05} />
     </Frame>
   );
@@ -258,7 +260,7 @@ function PublicChargeArt() {
       <rect x="21" y="21" width="14" height="14" rx="3" fill={GREEN} />
       <path d="M29 22.5L25.5 29h3l-1.2 5.5 5-7h-3.2l1.4-5z" fill={WHITE} />
       <rect x="22" y="43" width="12" height="3" rx="1.5" fill={BLUE_LIGHT} />
-      <path d="M40 48Q56 48 58 60" fill="none" stroke={WHITE} strokeWidth="2" strokeLinecap="round" />
+      <path d="M40 48Q56 48 58 60" fill="none" stroke={INK} strokeWidth="2" strokeLinecap="round" />
       <Car x={66} y={52} s={1.05} />
     </Frame>
   );
@@ -267,13 +269,13 @@ function PublicChargeArt() {
 // ─── Off-peak ───────────────────────────────────────────────────────────────
 
 function Sparkle({ x, y, s }: { x: number; y: number; s: number }) {
-  return <path transform={`translate(${x} ${y}) scale(${s})`} d="M0-4Q.6-.6 4 0Q.6.6 0 4Q-.6.6-4 0Q-.6-.6 0-4Z" fill={WHITE} />;
+  return <path transform={`translate(${x} ${y}) scale(${s})`} d="M0-4Q.6-.6 4 0Q.6.6 0 4Q-.6.6-4 0Q-.6-.6 0-4Z" fill={SUN_GOLD} />;
 }
 
 function OffPeakArt({ night }: { night: boolean }) {
   return night ? (
-    <Frame night>
-      <path d="M70 17a23 23 0 1 0 15 40A18 18 0 0 1 70 17z" fill={MOON} />
+    <Frame>
+      <path d="M70 17a23 23 0 1 0 15 40A18 18 0 0 1 70 17z" fill="url(#sv-moon)" />
       <Sparkle x={34} y={24} s={2.4} />
       <Sparkle x={100} y={26} s={1.6} />
       <Sparkle x={26} y={54} s={1.5} />
@@ -307,8 +309,8 @@ function CustomArt() {
 function UnknownArt() {
   return (
     <Frame>
-      <circle cx="60" cy="40" r="22" fill={WHITE} opacity="0.22" />
-      <text x="60" y="51" fontSize="30" fontWeight="800" textAnchor="middle" fill={WHITE}>?</text>
+      <circle cx="60" cy="40" r="22" fill={WHITE} />
+      <text x="60" y="51" fontSize="30" fontWeight="800" textAnchor="middle" fill={INK}>?</text>
     </Frame>
   );
 }
