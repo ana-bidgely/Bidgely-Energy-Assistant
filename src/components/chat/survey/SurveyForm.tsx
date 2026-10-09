@@ -67,7 +67,6 @@ function MaskedInput({ mask, value, onChange }: { mask: Mask; value: string; onC
   const showError = touched && value !== '' && !valid;
   return (
     <div className="sv-custom">
-      <label className="sv-custom-label">Enter your own value</label>
       <div className={`sv-input-wrap${showError ? ' error' : ''}${valid ? ' valid' : ''}`}>
         {mask.prefix && <span className="sv-adorn">{mask.prefix}</span>}
         <input
@@ -110,10 +109,7 @@ function QuestionBlock({
     <div className="sv-question">
       <div className="sv-q-head">
         <span className="sv-q-num">{index}</span>
-        <div>
-          <h3 className="sv-q-title">{q.title}</h3>
-          {q.hint && <p className="sv-q-hint">{q.hint}</p>}
-        </div>
+        <h3 className="sv-q-title">{q.title}</h3>
       </div>
       <div
         className="sv-grid"
@@ -131,7 +127,6 @@ function QuestionBlock({
         {q.custom && (
           <OptionCard
             label="Custom"
-            sub="Enter your own"
             art={q.plain ? undefined : 'custom'}
             selected={choice === 'custom'}
             onSelect={() => onChoice('custom')}
@@ -148,7 +143,7 @@ function QuestionBlock({
           onClick={() => onChoice(o.value)}
         >
           <span className="sv-skip-mark">?</span>
-          {o.label} <span className="sv-skip-sub">— {o.sub}</span>
+          {o.label}
         </button>
       ))}
       {q.custom && choice === 'custom' && (
@@ -272,10 +267,7 @@ export default function SurveyForm({ kind }: { kind: 'solar' | 'ev' }) {
                 <img src={def.icon} alt="" width={28} height={28} style={{ width: 28, height: 28 }} />
               </span>
             </span>
-            <div>
-              <h2 className="sv-title">{def.title}</h2>
-              <p className="sv-intro">{def.intro}</p>
-            </div>
+            <h2 className="sv-title">{def.title}</h2>
           </div>
 
           {def.sections.map((section) => {
@@ -285,7 +277,6 @@ export default function SurveyForm({ kind }: { kind: 'solar' | 'ev' }) {
               <section key={section.title} className="sv-section">
                 <div className="sv-section-head">
                   <h3>{section.title}</h3>
-                  <p>{section.subtitle}</p>
                 </div>
                 {qs.map((q) => {
                   counter += 1;

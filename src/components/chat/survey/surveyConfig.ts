@@ -38,7 +38,6 @@ export type Answers = Record<string, { choice?: string; custom?: string }>;
 export interface Question {
   id: string;
   title: string;
-  hint?: string;
   options: Opt[];
   /** Text-only cards (no illustration) — for plain numeric choices. */
   plain?: boolean;
@@ -51,14 +50,12 @@ export interface Question {
 
 export interface Section {
   title: string;
-  subtitle: string;
   questions: Question[];
 }
 
 export interface SurveyDef {
   kind: 'solar' | 'ev';
   title: string;
-  intro: string;
   icon: string;
   submitLabel: string;
   sections: Section[];
@@ -74,19 +71,15 @@ export const maskRangeText = (m: Mask) => {
 export const SOLAR_SURVEY: SurveyDef = {
   kind: 'solar',
   title: 'Is solar right for your home?',
-  intro:
-    'Tell us a bit about your roof and your costs and we’ll build your Solar Savings Report. Tap an answer for each question — no typing needed.',
   icon: '/welcome/solar.svg',
   submitLabel: 'Generate my Solar report',
   sections: [
     {
       title: 'Your roof',
-      subtitle: 'These three decide how much power your panels can make.',
       questions: [
         {
           id: 'roof',
           title: 'How much usable roof space do you have?',
-          hint: 'Count only the space free of vents, chimneys and skylights.',
           cols: 3,
           options: [
             { value: 'small', label: 'Small', sub: '~400 sq ft', art: 'roof-small' },
@@ -99,13 +92,12 @@ export const SOLAR_SURVEY: SurveyDef = {
         {
           id: 'orientation',
           title: 'Which way does your roof mainly face?',
-          hint: 'South-facing roofs catch the most sun in the northern hemisphere.',
           cols: 4,
           options: [
-            { value: 'south', label: 'South', sub: 'Best yield', art: 'dir-south' },
-            { value: 'east', label: 'East', sub: '~7% less', art: 'dir-east' },
-            { value: 'west', label: 'West', sub: '~7% less', art: 'dir-west' },
-            { value: 'north', label: 'North', sub: '~22% less', art: 'dir-north' },
+            { value: 'south', label: 'South', art: 'dir-south' },
+            { value: 'east', label: 'East', art: 'dir-east' },
+            { value: 'west', label: 'West', art: 'dir-west' },
+            { value: 'north', label: 'North', art: 'dir-north' },
             { value: 'skip', label: 'Not sure', sub: 'Use the estimate', art: 'unknown', muted: true },
           ],
         },
@@ -114,9 +106,9 @@ export const SOLAR_SURVEY: SurveyDef = {
           title: 'How much shade does your roof get during the day?',
           cols: 3,
           options: [
-            { value: 'none', label: 'None', sub: 'Full sun all day', art: 'shade-none' },
-            { value: 'partial', label: 'Partial', sub: 'Some trees or buildings', art: 'shade-partial' },
-            { value: 'heavy', label: 'Heavy', sub: 'Shaded most of the day', art: 'shade-heavy' },
+            { value: 'none', label: 'None', art: 'shade-none' },
+            { value: 'partial', label: 'Partial', art: 'shade-partial' },
+            { value: 'heavy', label: 'Heavy', art: 'shade-heavy' },
             { value: 'skip', label: 'Not sure', sub: 'Use the estimate', art: 'unknown', muted: true },
           ],
         },
@@ -124,12 +116,10 @@ export const SOLAR_SURVEY: SurveyDef = {
     },
     {
       title: 'Your costs',
-      subtitle: 'Used to work out your payback period.',
       questions: [
         {
           id: 'cost',
           title: 'What install price per watt are you looking at?',
-          hint: 'If you have an installer quote, divide the total price by the system watts.',
           cols: 3,
           options: [
             { value: '2.5', label: '$2.50 / W', sub: 'Great deal', art: 'dollar-1' },
@@ -149,14 +139,11 @@ export const SOLAR_SURVEY: SurveyDef = {
 export const EV_SURVEY: SurveyDef = {
   kind: 'ev',
   title: 'Is an EV right for you?',
-  intro:
-    'Tell us how you drive and where you’d charge and we’ll compare an EV against your current car. Tap an answer for each question — no typing needed.',
   icon: '/welcome/ev.svg',
   submitLabel: 'Generate my EV analysis',
   sections: [
     {
       title: 'Your driving',
-      subtitle: 'Used to estimate your fuel costs today.',
       questions: [
         {
           id: 'miles',
@@ -164,10 +151,10 @@ export const EV_SURVEY: SurveyDef = {
           cols: 3,
           plain: true,
           options: [
-            { value: '300', label: '300 miles', sub: 'Light driving' },
-            { value: '500', label: '500 miles', sub: 'Short commute' },
-            { value: '1000', label: '1,000 miles', sub: 'Most common' },
-            { value: '1500', label: '1,500 miles', sub: 'Heavy driving' },
+            { value: '300', label: '300 miles' },
+            { value: '500', label: '500 miles' },
+            { value: '1000', label: '1,000 miles' },
+            { value: '1500', label: '1,500 miles' },
           ],
           custom: { suffix: 'miles / month', decimals: 0, min: 50, max: 5000, placeholder: 'e.g. 800', maxLen: 4 },
         },
@@ -188,26 +175,24 @@ export const EV_SURVEY: SurveyDef = {
     },
     {
       title: 'Your charging',
-      subtitle: 'Where and when you charge sets your cost per mile.',
       questions: [
         {
           id: 'charging',
           title: 'Where would you mainly charge your EV?',
           cols: 2,
           options: [
-            { value: 'home', label: '100% at home', sub: 'Cheapest — best rate-plan savings', art: 'charge-home' },
-            { value: 'public', label: '100% public', sub: 'Public stations only', art: 'charge-public' },
+            { value: 'home', label: '100% at home', art: 'charge-home' },
+            { value: 'public', label: '100% public', art: 'charge-public' },
           ],
         },
         {
           id: 'offpeak',
           title: 'Could you charge off-peak (12 AM – 6 AM)?',
-          hint: 'Overnight charging gets the lowest electricity rate.',
           cols: 2,
           showIf: (a) => a.charging?.choice === 'home',
           options: [
-            { value: 'yes', label: 'Yes, off-peak', sub: 'Lowest rate', art: 'offpeak-yes' },
-            { value: 'no', label: 'No, my own hours', sub: 'Standard rate', art: 'offpeak-no' },
+            { value: 'yes', label: 'Yes, off-peak', art: 'offpeak-yes' },
+            { value: 'no', label: 'No, my own hours', art: 'offpeak-no' },
           ],
         },
       ],
