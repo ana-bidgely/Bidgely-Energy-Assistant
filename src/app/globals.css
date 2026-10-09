@@ -1173,6 +1173,10 @@ button { font-family: inherit; }
 .sv-card:focus-visible { outline: 3px solid rgba(29, 94, 216, .35); outline-offset: 2px; }
 .sv-card.selected { border-color: var(--primary); background: #F5F9FF; box-shadow: 0 0 0 3px var(--primary-10); }
 .sv-card.muted:not(.selected) { border-style: dashed; background: #FAFBFD; }
+.sv-card.plain { justify-content: center; align-items: center; text-align: center; min-height: 84px; padding: 16px 10px; }
+.sv-card.plain .sv-card-label { font-size: 17px; line-height: 24px; }
+.sv-card.plain .sv-badge { top: 8px; left: 50%; transform: translateX(-50%); }
+.sv-card.plain .sv-check { top: 8px; right: 8px; }
 .sv-card-art { display: block; aspect-ratio: 3 / 2; border-radius: 9px; overflow: hidden; margin-bottom: 8px; }
 .sv-card-label { padding: 0 6px; font-size: 14px; line-height: 20px; font-weight: 600; color: var(--text-primary); }
 .sv-card-sub { padding: 0 6px; font-size: 12px; line-height: 16px; color: var(--text-secondary); }

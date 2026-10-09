@@ -102,7 +102,7 @@ export const SOLAR_SURVEY: SurveyDef = {
           hint: 'South-facing roofs catch the most sun in the northern hemisphere.',
           cols: 4,
           options: [
-            { value: 'south', label: 'South', sub: 'Best yield', art: 'dir-south' },
+            { value: 'south', label: 'South', sub: 'Best yield', badge: 'Best', art: 'dir-south' },
             { value: 'east', label: 'East', sub: '~7% less', art: 'dir-east' },
             { value: 'west', label: 'West', sub: '~7% less', art: 'dir-west' },
             { value: 'north', label: 'North', sub: '~22% less', art: 'dir-north' },
@@ -134,7 +134,7 @@ export const SOLAR_SURVEY: SurveyDef = {
           options: [
             { value: '2.5', label: '$2.50 / W', sub: 'Great deal', art: 'dollar-1' },
             { value: '2.8', label: '$2.80 / W', sub: 'Competitive', art: 'dollar-2' },
-            { value: '3.1', label: '$3.10 / W', sub: 'Typical', art: 'dollar-3' },
+            { value: '3.1', label: '$3.10 / W', sub: 'Typical', badge: 'Typical', art: 'dollar-3' },
             { value: 'skip', label: 'No quote yet', sub: 'Use typical pricing', art: 'unknown', muted: true },
           ],
           custom: { prefix: '$', suffix: '/ W', decimals: 2, min: 1.5, max: 6, placeholder: '3.10', maxLen: 4 },
@@ -166,7 +166,7 @@ export const EV_SURVEY: SurveyDef = {
           options: [
             { value: '300', label: '300 miles', sub: 'Light driving' },
             { value: '500', label: '500 miles', sub: 'Short commute' },
-            { value: '1000', label: '1,000 miles', sub: 'Most common' },
+            { value: '1000', label: '1,000 miles', sub: 'Most common', badge: 'Most common' },
             { value: '1500', label: '1,500 miles', sub: 'Heavy driving' },
           ],
           custom: { suffix: 'miles / month', decimals: 0, min: 50, max: 5000, placeholder: 'e.g. 800', maxLen: 4 },

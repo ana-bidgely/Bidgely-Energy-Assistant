@@ -23,14 +23,9 @@ export type ArtName =
   | 'shade-none'
   | 'shade-partial'
   | 'shade-heavy'
-  | 'price-low'
-  | 'price-mid'
-  | 'price-high'
-  | 'miles-300'
-  | 'miles-500'
-  | 'miles-1000'
-  | 'miles-1500'
-  | 'mpg'
+  | 'dollar-1'
+  | 'dollar-2'
+  | 'dollar-3'
   | 'charge-home'
   | 'charge-public'
   | 'offpeak-yes'
@@ -154,17 +149,14 @@ function ShadeArt({ level }: { level: 'none' | 'partial' | 'heavy' }) {
   );
 }
 
-function PriceArt({ level }: { level: 'low' | 'mid' | 'high' }) {
-  const stacks = { low: 2, mid: 3, high: 4 }[level];
+/** Just a row of dollar signs — the more $, the pricier the install. */
+function DollarArt({ n }: { n: 1 | 2 | 3 }) {
   return (
     <Frame>
       <rect x="0" y="0" width="120" height="80" rx="8" fill="#FFF6E0" />
-      <path d="M30 20h34l22 22-22 22H30z" fill={WALL} stroke={SUN} strokeWidth="2.5" strokeLinejoin="round" />
-      <circle cx="40" cy="42" r="3.5" fill="#FFF6E0" stroke={SUN} strokeWidth="2" />
-      <text x="62" y="48" fontSize="18" fontWeight="800" textAnchor="middle" fill={INK}>$</text>
-      {Array.from({ length: stacks }).map((_, i) => (
-        <rect key={i} x={92} y={58 - i * 9} width="16" height="6" rx="3" fill={SUN} />
-      ))}
+      <text x="60" y="53" fontSize={n === 1 ? 40 : n === 2 ? 36 : 30} fontWeight="800" textAnchor="middle" fill={SUN} letterSpacing="2">
+        {'$'.repeat(n)}
+      </text>
     </Frame>
   );
 }
@@ -178,38 +170,6 @@ function Car({ x, y }: { x: number; y: number }) {
       <circle cx="4" cy="16" r="3" fill={INK} />
       <circle cx="19" cy="16" r="3" fill={INK} />
     </g>
-  );
-}
-
-function MilesArt({ n }: { n: 1 | 2 | 3 | 4 }) {
-  const roadLen = 28 + n * 18;
-  return (
-    <Frame>
-      <rect x="0" y="0" width="120" height="80" rx="8" fill={SKY} />
-      <rect x="8" y="50" width="104" height="14" rx="3" fill="#5B6578" />
-      <g stroke="#FFFFFF" strokeWidth="1.6" strokeDasharray="6 5">
-        <line x1="12" y1="57" x2="108" y2="57" />
-      </g>
-      <line x1="10" y1="40" x2={10 + roadLen} y2="40" stroke={BLUE} strokeWidth="3" strokeLinecap="round" strokeDasharray="1 6" />
-      <polygon points={`${10 + roadLen + 4},40 ${10 + roadLen - 3},35 ${10 + roadLen - 3},45`} fill={BLUE} />
-      <Car x={14} y={26} />
-      <text x="60" y="20" fontSize="9" fontWeight="700" textAnchor="middle" fill="#8A93A6">
-        {['', 'LOW', 'AVERAGE', 'HIGH', 'VERY HIGH'][n]}
-      </text>
-    </Frame>
-  );
-}
-
-function MpgArt() {
-  return (
-    <Frame>
-      <rect x="0" y="0" width="120" height="80" rx="8" fill="#FFF1EC" />
-      <rect x="34" y="16" width="30" height="46" rx="4" fill={WALL} stroke="#E8734A" strokeWidth="2.5" />
-      <rect x="39" y="22" width="20" height="12" rx="2" fill="#FFD9CC" />
-      <path d="M64 28h8a5 5 0 015 5v18a3 3 0 006 0V30l-6-7" fill="none" stroke="#E8734A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-      <rect x="28" y="62" width="42" height="6" rx="2" fill="#E8734A" />
-      <path d="M92 56a12 12 0 0124 0" fill="none" stroke={GRAY} strokeWidth="4" strokeLinecap="round" transform="translate(-8 -2) scale(0.9)" />
-    </Frame>
   );
 }
 
@@ -306,14 +266,9 @@ export function Art({ name }: { name: ArtName }) {
     case 'shade-none': return <ShadeArt level="none" />;
     case 'shade-partial': return <ShadeArt level="partial" />;
     case 'shade-heavy': return <ShadeArt level="heavy" />;
-    case 'price-low': return <PriceArt level="low" />;
-    case 'price-mid': return <PriceArt level="mid" />;
-    case 'price-high': return <PriceArt level="high" />;
-    case 'miles-300': return <MilesArt n={1} />;
-    case 'miles-500': return <MilesArt n={2} />;
-    case 'miles-1000': return <MilesArt n={3} />;
-    case 'miles-1500': return <MilesArt n={4} />;
-    case 'mpg': return <MpgArt />;
+    case 'dollar-1': return <DollarArt n={1} />;
+    case 'dollar-2': return <DollarArt n={2} />;
+    case 'dollar-3': return <DollarArt n={3} />;
     case 'charge-home': return <HomeChargeArt />;
     case 'charge-public': return <PublicChargeArt />;
     case 'offpeak-yes': return <OffPeakArt yes />;

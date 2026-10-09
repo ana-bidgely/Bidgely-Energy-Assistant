@@ -37,7 +37,7 @@ function OptionCard({
   label: string;
   sub?: string;
   badge?: string;
-  art: Parameters<typeof Art>[0]['name'];
+  art?: Parameters<typeof Art>[0]['name'];
   muted?: boolean;
   selected: boolean;
   onSelect: () => void;
@@ -48,9 +48,9 @@ function OptionCard({
       role="radio"
       aria-checked={selected}
       onClick={onSelect}
-      className={`sv-card${selected ? ' selected' : ''}${muted ? ' muted' : ''}`}
+      className={`sv-card${selected ? ' selected' : ''}${muted ? ' muted' : ''}${art ? '' : ' plain'}`}
     >
-      <span className="sv-card-art"><Art name={art} /></span>
+      {art && <span className="sv-card-art"><Art name={art} /></span>}
       {badge && <span className="sv-badge">{badge}</span>}
       <span className="sv-card-label">{label}</span>
       {sub && <span className="sv-card-sub">{sub}</span>}
@@ -117,7 +117,11 @@ function QuestionBlock({
       </div>
       <div
         className="sv-grid"
-        style={{ ['--n' as string]: Math.min(5, Math.max(2, cards.length + (q.custom ? 1 : 0))) }}
+        style={{
+          ['--n' as string]: Math.min(5, Math.max(2, cards.length + (q.custom ? 1 : 0))),
+          // Two big picture cards stretch absurdly wide — keep them card-sized.
+          maxWidth: cards.length + (q.custom ? 1 : 0) <= 2 ? 520 : undefined,
+        }}
         role="radiogroup"
         aria-label={q.title}
       >
@@ -128,7 +132,7 @@ function QuestionBlock({
           <OptionCard
             label="Custom"
             sub="Enter your own"
-            art="custom"
+            art={q.plain ? undefined : 'custom'}
             selected={choice === 'custom'}
             onSelect={() => onChoice('custom')}
           />
