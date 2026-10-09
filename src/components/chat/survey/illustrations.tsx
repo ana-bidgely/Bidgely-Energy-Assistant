@@ -1,16 +1,25 @@
-// Inline SVG illustrations for the survey option cards. Each is drawn on a
-// 120x80 canvas with the same small palette so the cards feel like one set.
+// Survey illustrations — one visual system.
+//
+// Rules every piece follows, so the set reads as one family:
+//  • 120×80 canvas on the same soft blue tint, rounded corners.
+//  • Flat fills only: no outlines, gradients or filters.
+//  • One palette (below). Brand blue is the "subject", yellow = sun/energy,
+//    green = nature/charging, slate = structure.
+//  • Houses and cars are single shared components, so every scene that
+//    contains one looks identical.
 
+const BG = '#EEF4FF';
+const GROUND = '#DCE8F9';
 const BLUE = '#186CDD';
-const BLUE_LIGHT = '#DBE7FE';
-const SKY = '#EAF3FF';
-const SUN = '#F5B83D';
-const GREEN = '#2E9E5B';
-const GREEN_DARK = '#1F7A43';
-const WALL = '#FFFFFF';
-const LINE = '#C9D3E6';
-const INK = '#1E232E';
-const GRAY = '#E1E5EF';
+const BLUE_LIGHT = '#CFE0FB';
+const SLATE = '#3B4A63';
+const SLATE_LIGHT = '#94A3B8';
+const WHITE = '#FFFFFF';
+const SUN = '#FFC53D';
+const SUN_LIGHT = '#FFE29A';
+const GREEN = '#34B16B';
+const GREEN_DARK = '#1F8F52';
+const NIGHT = '#1E2A4A';
 
 export type ArtName =
   | 'roof-small'
@@ -33,157 +42,188 @@ export type ArtName =
   | 'custom'
   | 'unknown';
 
-function Frame({ children }: { children: React.ReactNode }) {
+function Frame({ children, bg = BG }: { children: React.ReactNode; bg?: string }) {
   return (
-    <svg viewBox="0 0 120 80" width="100%" height="100%" role="img" aria-hidden="true" preserveAspectRatio="xMidYMid meet">
+    <svg viewBox="0 0 120 80" width="100%" height="100%" role="img" aria-hidden="true" preserveAspectRatio="xMidYMid slice">
+      <rect width="120" height="80" fill={bg} />
       {children}
     </svg>
   );
 }
 
-/** A house front with a panel grid on the roof. `rows` x `cols` panels. */
-function RoofArt({ cols, rows }: { cols: number; rows: number }) {
-  const roofTop = 12;
-  const roofBottom = 44;
-  const panels = [];
-  const gridW = cols * 9;
-  const startX = 60 - gridW / 2;
-  const panelH = Math.min(9, (roofBottom - roofTop - 6) / rows);
-  for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < cols; c++) {
-      panels.push(
-        <rect
-          key={`${r}-${c}`}
-          x={startX + c * 9 + 0.8}
-          y={roofTop + 4 + r * (panelH + 1)}
-          width={7.4}
-          height={panelH}
-          rx={1}
-          fill={BLUE}
-          opacity={0.92}
-        />,
-      );
-    }
-  }
-  return (
-    <Frame>
-      <rect x="0" y="0" width="120" height="80" rx="8" fill={SKY} />
-      <polygon points={`10,${roofBottom} 60,${roofTop - 4} 110,${roofBottom}`} fill="#8A93A6" />
-      <polygon points={`14,${roofBottom} 60,${roofTop} 106,${roofBottom}`} fill="#B7BFCF" />
-      {panels}
-      <rect x="22" y={roofBottom} width="76" height="28" fill={WALL} stroke={LINE} />
-      <rect x="54" y="54" width="12" height="18" rx="1.5" fill={BLUE_LIGHT} stroke={LINE} />
-      <rect x="30" y="54" width="14" height="10" rx="1.5" fill={BLUE_LIGHT} stroke={LINE} />
-      <rect x="76" y="54" width="14" height="10" rx="1.5" fill={BLUE_LIGHT} stroke={LINE} />
-      <rect x="0" y="72" width="120" height="8" fill="#CFE8D6" />
-    </Frame>
-  );
-}
+// ─── Shared building blocks ─────────────────────────────────────────────────
 
-/** Compass dial with the roof-facing direction highlighted and a sun at south. */
-function DirArt({ dir }: { dir: 'north' | 'east' | 'south' | 'west' }) {
-  const angle = { north: 0, east: 90, south: 180, west: 270 }[dir];
-  const labelProps = { fontSize: 8, fontWeight: 700, textAnchor: 'middle' as const, fill: '#8A93A6' };
-  return (
-    <Frame>
-      <rect x="0" y="0" width="120" height="80" rx="8" fill={SKY} />
-      <circle cx="60" cy="40" r="29" fill={WALL} stroke={LINE} strokeWidth="1.5" />
-      <text x="60" y="17" {...labelProps}>N</text>
-      <text x="60" y="68" {...labelProps}>S</text>
-      <text x="94" y="43" {...labelProps}>E</text>
-      <text x="26" y="43" {...labelProps}>W</text>
-      <g transform={`rotate(${angle} 60 40)`}>
-        <polygon points="60,16 54,40 66,40" fill={BLUE} />
-        <polygon points="60,64 54,40 66,40" fill={GRAY} />
-      </g>
-      <circle cx="60" cy="40" r="3.2" fill={INK} />
-      {dir === 'south' && <circle cx="102" cy="14" r="7" fill={SUN} />}
-    </Frame>
-  );
-}
-
-function Tree({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
+/** Front-facing house. Origin = top-left of the wall; wall is 44×26. */
+function House({ x, y, s = 1, panel = false }: { x: number; y: number; s?: number; panel?: boolean }) {
   return (
     <g transform={`translate(${x} ${y}) scale(${s})`}>
-      <rect x="-1.5" y="10" width="3" height="10" fill="#8B6B4A" />
-      <circle cx="0" cy="6" r="10" fill={GREEN} />
-      <circle cx="-5" cy="10" r="6" fill={GREEN_DARK} opacity="0.5" />
+      <path d="M-3 2L22-15 47 2" fill="none" stroke={SLATE} strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
+      {panel && <rect x="12" y="-9" width="20" height="8" rx="2" fill={BLUE} transform="rotate(-2 22 -5)" />}
+      <rect width="44" height="26" rx="3" fill={WHITE} />
+      <rect x="6" y="9" width="10" height="9" rx="2" fill={BLUE_LIGHT} />
+      <rect x="28" y="6" width="9" height="20" rx="2" fill={BLUE_LIGHT} />
     </g>
   );
 }
 
-function ShadeArt({ level }: { level: 'none' | 'partial' | 'heavy' }) {
+/** Side-view EV facing right. Origin = top-left; 34×15. */
+function Car({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
+  return (
+    <g transform={`translate(${x} ${y}) scale(${s})`}>
+      <path d="M1 11V8.6Q1 7 2.8 6.6L8 5.2Q10 1.5 14 1.5H21Q24 1.5 26 5L30 6.2Q33 6.8 33 9V11Q33 12 32 12H2Q1 12 1 11Z" fill={BLUE} />
+      <path d="M10.2 5Q11.5 3.1 14 3.1H16.2V5Z" fill={BLUE_LIGHT} />
+      <path d="M17.6 3.1H21Q22.6 3.1 23.7 5H17.6Z" fill={BLUE_LIGHT} />
+      <circle cx="9.5" cy="12" r="3.2" fill={SLATE} />
+      <circle cx="9.5" cy="12" r="1.2" fill={WHITE} />
+      <circle cx="25" cy="12" r="3.2" fill={SLATE} />
+      <circle cx="25" cy="12" r="1.2" fill={WHITE} />
+    </g>
+  );
+}
+
+function Bolt({ x, y, s = 1, fill = WHITE }: { x: number; y: number; s?: number; fill?: string }) {
+  return <path transform={`translate(${x} ${y}) scale(${s})`} d="M3 0L0 6.5h3L2 12l5-7H4l2-5z" fill={fill} />;
+}
+
+function Sun({ x, y, r, rays = true }: { x: number; y: number; r: number; rays?: boolean }) {
+  const angles = [0, 45, 90, 135, 180, 225, 270, 315];
+  return (
+    <g>
+      {rays &&
+        angles.map((a) => (
+          <rect
+            key={a}
+            x={x - 1.3}
+            y={y - r - 6}
+            width="2.6"
+            height="4.5"
+            rx="1.3"
+            fill={SUN}
+            transform={`rotate(${a} ${x} ${y})`}
+          />
+        ))}
+      <circle cx={x} cy={y} r={r} fill={SUN} />
+    </g>
+  );
+}
+
+function Tree({ x, y, s = 1, dark = false }: { x: number; y: number; s?: number; dark?: boolean }) {
+  return (
+    <g transform={`translate(${x} ${y}) scale(${s})`}>
+      <rect x="-1.6" y="9" width="3.2" height="9" rx="1.2" fill={SLATE} />
+      <circle cx="0" cy="5" r="9.5" fill={dark ? GREEN_DARK : GREEN} />
+    </g>
+  );
+}
+
+// ─── Roof size ──────────────────────────────────────────────────────────────
+
+/** Solar roof; `top` + `bottom` = how many panels in the upper / lower row. */
+function RoofArt({ top, bottom }: { top: number; bottom: number }) {
+  const pitch = 12;
+  const row = (count: number, y: number) =>
+    Array.from({ length: count }).map((_, i) => (
+      <rect key={`${y}-${i}`} x={60 - (count * pitch - 2) / 2 + i * pitch} y={y} width="10" height="9" rx="2" fill={BLUE} />
+    ));
   return (
     <Frame>
-      <rect x="0" y="0" width="120" height="80" rx="8" fill={level === 'heavy' ? '#DDE5F0' : SKY} />
-      {level !== 'heavy' && <circle cx="98" cy="16" r="9" fill={SUN} />}
-      {level === 'none' && (
-        <g stroke={SUN} strokeWidth="2" strokeLinecap="round">
-          <line x1="98" y1="2" x2="98" y2="4" />
-          <line x1="110" y1="16" x2="112" y2="16" />
-          <line x1="86" y1="16" x2="84" y2="16" />
-          <line x1="106" y1="8" x2="108" y2="6" />
-          <line x1="90" y1="8" x2="88" y2="6" />
-        </g>
-      )}
-      <polygon points="30,42 60,20 90,42" fill="#B7BFCF" />
-      <rect x="36" y="42" width="48" height="28" fill={WALL} stroke={LINE} />
-      <rect x="51" y="30" width="18" height="9" rx="1" fill={BLUE} opacity={level === 'heavy' ? 0.45 : 0.92} />
-      <rect x="0" y="70" width="120" height="10" fill="#CFE8D6" />
+      <rect y="64" width="120" height="16" fill={GROUND} />
+      <path d="M12 46L34 16H86L108 46Z" fill={SLATE} />
+      {row(top, 19)}
+      {row(bottom, 31)}
+      <rect x="22" y="46" width="76" height="22" rx="3" fill={WHITE} />
+      <rect x="31" y="53" width="12" height="8" rx="2" fill={BLUE_LIGHT} />
+      <rect x="77" y="53" width="12" height="8" rx="2" fill={BLUE_LIGHT} />
+      <rect x="54" y="52" width="12" height="16" rx="2" fill={BLUE_LIGHT} />
+    </Frame>
+  );
+}
+
+// ─── Roof direction ─────────────────────────────────────────────────────────
+
+function DirArt({ dir }: { dir: 'north' | 'east' | 'south' | 'west' }) {
+  const angle = { north: 0, east: 90, south: 180, west: 270 }[dir];
+  const letters: { l: string; x: number; y: number; d: typeof dir }[] = [
+    { l: 'N', x: 60, y: 20, d: 'north' },
+    { l: 'E', x: 83, y: 43, d: 'east' },
+    { l: 'S', x: 60, y: 66, d: 'south' },
+    { l: 'W', x: 37, y: 43, d: 'west' },
+  ];
+  return (
+    <Frame>
+      <circle cx="60" cy="40" r="31" fill={WHITE} />
+      <circle cx="60" cy="40" r="31" fill="none" stroke={BLUE_LIGHT} strokeWidth="3" />
+      {letters.map(({ l, x, y, d }) => (
+        <text key={l} x={x} y={y} fontSize="9" fontWeight="800" textAnchor="middle" fill={d === dir ? BLUE : SLATE_LIGHT}>
+          {l}
+        </text>
+      ))}
+      <g transform={`rotate(${angle} 60 40)`}>
+        <path d="M60 29L65 40H55Z" fill={BLUE} strokeLinejoin="round" stroke={BLUE} strokeWidth="2" />
+        <path d="M60 51L65 40H55Z" fill={BLUE_LIGHT} strokeLinejoin="round" stroke={BLUE_LIGHT} strokeWidth="2" />
+      </g>
+      <circle cx="60" cy="40" r="3" fill={WHITE} />
+      <circle cx="60" cy="40" r="1.6" fill={SLATE} />
+    </Frame>
+  );
+}
+
+// ─── Shade ──────────────────────────────────────────────────────────────────
+
+function ShadeArt({ level }: { level: 'none' | 'partial' | 'heavy' }) {
+  return (
+    <Frame bg={level === 'heavy' ? '#DCE3EE' : BG}>
+      <rect y="64" width="120" height="16" fill={level === 'heavy' ? '#CBD5E3' : GROUND} />
+      {level === 'none' && <Sun x={96} y={20} r={8} />}
       {level === 'partial' && (
         <>
-          <Tree x={16} y={46} s={1.05} />
-          <ellipse cx="82" cy="22" rx="12" ry="5" fill="#FFFFFF" opacity="0.9" />
+          <Sun x={96} y={20} r={8} rays={false} />
+          <ellipse cx="92" cy="24" rx="13" ry="6.5" fill={WHITE} />
+          <ellipse cx="102" cy="20" rx="8" ry="5.5" fill={WHITE} />
         </>
       )}
       {level === 'heavy' && (
         <>
-          <Tree x={14} y={40} s={1.35} />
-          <Tree x={104} y={42} s={1.3} />
-          <Tree x={34} y={34} s={1.2} />
-          <Tree x={86} y={36} s={1.2} />
-          <ellipse cx="60" cy="14" rx="26" ry="8" fill="#FFFFFF" opacity="0.85" />
+          <ellipse cx="84" cy="16" rx="16" ry="7" fill={WHITE} opacity="0.9" />
+          <ellipse cx="96" cy="12" rx="10" ry="6" fill={WHITE} opacity="0.9" />
+        </>
+      )}
+      <House x={38} y={42} panel />
+      {level === 'partial' && <Tree x={22} y={46} s={1.05} />}
+      {level === 'heavy' && (
+        <>
+          <Tree x={24} y={44} s={1.25} dark />
+          <Tree x={96} y={44} s={1.25} dark />
+          <Tree x={42} y={34} s={1.1} />
+          <Tree x={78} y={34} s={1.1} />
         </>
       )}
     </Frame>
   );
 }
 
-/** Just a row of dollar signs — the more $, the pricier the install. */
+// ─── Install price ──────────────────────────────────────────────────────────
+
 function DollarArt({ n }: { n: 1 | 2 | 3 }) {
   return (
     <Frame>
-      <rect x="0" y="0" width="120" height="80" rx="8" fill="#FFF6E0" />
-      <text x="60" y="53" fontSize={n === 1 ? 40 : n === 2 ? 36 : 30} fontWeight="800" textAnchor="middle" fill={SUN} letterSpacing="2">
+      <text x="60" y="54" fontSize={n === 1 ? 44 : n === 2 ? 38 : 32} fontWeight="800" textAnchor="middle" fill={BLUE} letterSpacing="1">
         {'$'.repeat(n)}
       </text>
     </Frame>
   );
 }
 
-function Car({ x, y }: { x: number; y: number }) {
-  return (
-    <g transform={`translate(${x} ${y})`}>
-      <path d="M0 10l4-8h14l5 8h5v6H-3v-6z" fill={BLUE} />
-      <rect x="5" y="3.5" width="5" height="5" rx="1" fill={BLUE_LIGHT} />
-      <rect x="11.5" y="3.5" width="5" height="5" rx="1" fill={BLUE_LIGHT} />
-      <circle cx="4" cy="16" r="3" fill={INK} />
-      <circle cx="19" cy="16" r="3" fill={INK} />
-    </g>
-  );
-}
+// ─── Charging ───────────────────────────────────────────────────────────────
 
 function HomeChargeArt() {
   return (
     <Frame>
-      <rect x="0" y="0" width="120" height="80" rx="8" fill={SKY} />
-      <polygon points="14,40 44,16 74,40" fill="#B7BFCF" />
-      <rect x="20" y="40" width="48" height="28" fill={WALL} stroke={LINE} />
-      <rect x="40" y="50" width="12" height="18" rx="1.5" fill={BLUE_LIGHT} stroke={LINE} />
-      <rect x="66" y="48" width="8" height="12" rx="2" fill={GREEN} />
-      <path d="M70 60c10 2 14 6 16 12" fill="none" stroke={INK} strokeWidth="1.8" strokeLinecap="round" />
-      <Car x={84} y={50} />
-      <rect x="0" y="70" width="120" height="10" fill="#CFE8D6" />
+      <rect y="64" width="120" height="16" fill={GROUND} />
+      <House x={10} y={38} />
+      <rect x="52" y="48" width="7" height="12" rx="2" fill={GREEN} />
+      <path d="M59 56Q70 56 72 62" fill="none" stroke={SLATE} strokeWidth="2" strokeLinecap="round" />
+      <Car x={72} y={51} s={1.1} />
     </Frame>
   );
 }
@@ -191,55 +231,47 @@ function HomeChargeArt() {
 function PublicChargeArt() {
   return (
     <Frame>
-      <rect x="0" y="0" width="120" height="80" rx="8" fill={SKY} />
-      <rect x="22" y="14" width="22" height="46" rx="4" fill={WALL} stroke={GREEN} strokeWidth="2.5" />
-      <rect x="27" y="20" width="12" height="10" rx="1.5" fill="#D7F0E0" />
-      <path d="M34 36l-4 8h4l-2 7 6-9h-4l2-6z" fill={GREEN} />
-      <path d="M44 40c14 0 12 18 26 18" fill="none" stroke={INK} strokeWidth="2" strokeLinecap="round" />
-      <Car x={72} y={46} />
-      <rect x="0" y="66" width="120" height="14" fill="#5B6578" />
+      <rect y="64" width="120" height="16" fill={GROUND} />
+      <rect x="16" y="16" width="24" height="48" rx="5" fill={WHITE} />
+      <rect x="21" y="21" width="14" height="14" rx="3" fill={GREEN} />
+      <Bolt x={25.5} y={22.5} s={0.9} />
+      <rect x="22" y="43" width="12" height="3" rx="1.5" fill={BLUE_LIGHT} />
+      <path d="M40 48Q56 48 58 60" fill="none" stroke={SLATE} strokeWidth="2" strokeLinecap="round" />
+      <Car x={66} y={51} s={1.1} />
     </Frame>
   );
 }
 
-function OffPeakArt({ yes }: { yes: boolean }) {
-  return (
+function OffPeakArt({ night }: { night: boolean }) {
+  return night ? (
+    <Frame bg={NIGHT}>
+      <path d="M70 18a22 22 0 1 0 14 38A17 17 0 0 1 70 18z" fill={SUN_LIGHT} />
+      <circle cx="30" cy="22" r="1.8" fill={WHITE} />
+      <circle cx="46" cy="12" r="1.3" fill={WHITE} />
+      <circle cx="26" cy="50" r="1.3" fill={WHITE} />
+      <circle cx="98" cy="22" r="1.5" fill={WHITE} />
+      <circle cx="102" cy="56" r="1.2" fill={WHITE} />
+    </Frame>
+  ) : (
     <Frame>
-      <rect x="0" y="0" width="120" height="80" rx="8" fill={yes ? '#1F2A44' : SKY} />
-      {yes ? (
-        <>
-          <path d="M72 18a20 20 0 1013 36 16 16 0 01-13-36z" fill="#FFE9A8" />
-          <circle cx="30" cy="20" r="1.8" fill="#FFFFFF" />
-          <circle cx="46" cy="12" r="1.4" fill="#FFFFFF" />
-          <circle cx="24" cy="44" r="1.4" fill="#FFFFFF" />
-          <circle cx="98" cy="22" r="1.4" fill="#FFFFFF" />
-          <text x="60" y="72" fontSize="9" fontWeight="700" textAnchor="middle" fill="#FFE9A8">12 AM – 6 AM</text>
-        </>
-      ) : (
-        <>
-          <circle cx="60" cy="34" r="16" fill={SUN} />
-          <g stroke={SUN} strokeWidth="3" strokeLinecap="round">
-            <line x1="60" y1="8" x2="60" y2="12" />
-            <line x1="60" y1="56" x2="60" y2="60" />
-            <line x1="34" y1="34" x2="38" y2="34" />
-            <line x1="82" y1="34" x2="86" y2="34" />
-          </g>
-          <text x="60" y="74" fontSize="9" fontWeight="700" textAnchor="middle" fill="#8A93A6">My own hours</text>
-        </>
-      )}
+      <Sun x={60} y={40} r={14} />
     </Frame>
   );
 }
+
+// ─── Generic ────────────────────────────────────────────────────────────────
 
 function CustomArt() {
   return (
     <Frame>
-      <rect x="0" y="0" width="120" height="80" rx="8" fill="#F1ECFF" />
-      <rect x="22" y="28" width="62" height="22" rx="4" fill={WALL} stroke="#8B6CF0" strokeWidth="2" />
-      <line x1="30" y1="39" x2="52" y2="39" stroke="#C9BDF7" strokeWidth="3" strokeLinecap="round" />
-      <rect x="55" y="33" width="2" height="12" fill="#8B6CF0" />
-      <path d="M84 56l20-20 6 6-20 20-9 3z" fill="#8B6CF0" />
-      <path d="M100 40l6 6" stroke="#FFFFFF" strokeWidth="2" />
+      <rect x="14" y="29" width="62" height="22" rx="6" fill={WHITE} />
+      <rect x="22" y="38" width="22" height="4" rx="2" fill={BLUE_LIGHT} />
+      <rect x="50" y="33.5" width="2.4" height="13" rx="1.2" fill={BLUE} />
+      <g transform="rotate(40 88 44)">
+        <rect x="82" y="22" width="12" height="30" rx="3" fill={BLUE} />
+        <path d="M82 52h12l-6 9z" fill={SUN_LIGHT} />
+        <path d="M85.2 58.4h5.6L88 62z" fill={SLATE} />
+      </g>
     </Frame>
   );
 }
@@ -247,18 +279,17 @@ function CustomArt() {
 function UnknownArt() {
   return (
     <Frame>
-      <rect x="0" y="0" width="120" height="80" rx="8" fill="#F4F6FA" />
-      <circle cx="60" cy="40" r="20" fill={WALL} stroke={LINE} strokeWidth="2" />
-      <text x="60" y="50" fontSize="26" fontWeight="800" textAnchor="middle" fill="#8A93A6">?</text>
+      <circle cx="60" cy="40" r="22" fill={WHITE} />
+      <text x="60" y="51" fontSize="30" fontWeight="800" textAnchor="middle" fill={BLUE}>?</text>
     </Frame>
   );
 }
 
 export function Art({ name }: { name: ArtName }) {
   switch (name) {
-    case 'roof-small': return <RoofArt cols={3} rows={1} />;
-    case 'roof-medium': return <RoofArt cols={5} rows={2} />;
-    case 'roof-large': return <RoofArt cols={7} rows={3} />;
+    case 'roof-small': return <RoofArt top={0} bottom={2} />;
+    case 'roof-medium': return <RoofArt top={2} bottom={4} />;
+    case 'roof-large': return <RoofArt top={4} bottom={6} />;
     case 'dir-south': return <DirArt dir="south" />;
     case 'dir-east': return <DirArt dir="east" />;
     case 'dir-west': return <DirArt dir="west" />;
@@ -271,8 +302,8 @@ export function Art({ name }: { name: ArtName }) {
     case 'dollar-3': return <DollarArt n={3} />;
     case 'charge-home': return <HomeChargeArt />;
     case 'charge-public': return <PublicChargeArt />;
-    case 'offpeak-yes': return <OffPeakArt yes />;
-    case 'offpeak-no': return <OffPeakArt yes={false} />;
+    case 'offpeak-yes': return <OffPeakArt night />;
+    case 'offpeak-no': return <OffPeakArt night={false} />;
     case 'custom': return <CustomArt />;
     case 'unknown': return <UnknownArt />;
   }
