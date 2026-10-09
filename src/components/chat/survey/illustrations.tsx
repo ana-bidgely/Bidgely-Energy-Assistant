@@ -250,9 +250,9 @@ function HomeChargeArt() {
     <Frame>
       <Ground />
       <PlacedHouse cx={34} baseY={66} s={0.62} />
-      <rect x="50" y="49" width="6" height="11" rx="2" fill={GREEN} />
-      <path d="M56 56Q65 56 67 61" fill="none" stroke={INK} strokeWidth="2" strokeLinecap="round" />
-      <Car x={68} y={52} s={1.05} />
+      <rect x="58.5" y="52" width="6" height="11" rx="2" fill={GREEN} />
+      <path d="M64.5 57.5Q71 57.5 74 62" fill="none" stroke={INK} strokeWidth="2" strokeLinecap="round" />
+      <Car x={74} y={52} s={1.05} />
     </Frame>
   );
 }
