@@ -1177,7 +1177,7 @@ button { font-family: inherit; }
 .sv-card.plain .sv-card-label { font-size: 17px; line-height: 24px; }
 .sv-card.plain .sv-badge { top: 8px; left: 50%; transform: translateX(-50%); }
 .sv-card.plain .sv-check { top: 8px; right: 8px; }
-.sv-card-art { display: block; aspect-ratio: 3 / 2; border-radius: 9px; overflow: hidden; margin-bottom: 8px; }
+.sv-card-art { display: block; aspect-ratio: 3 / 2; border-radius: 16px; overflow: hidden; margin-bottom: 8px; }
 .sv-card-label { padding: 0 6px; font-size: 14px; line-height: 20px; font-weight: 600; color: var(--text-primary); }
 .sv-card-sub { padding: 0 6px; font-size: 12px; line-height: 16px; color: var(--text-secondary); }
 .sv-badge {
